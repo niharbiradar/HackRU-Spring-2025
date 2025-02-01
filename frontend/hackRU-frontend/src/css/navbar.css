@@ -1,18 +1,24 @@
+/* Reset margin and padding */
 body {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
+/* Navbar styling */
 .navbar {
+    position: fixed; /* Fixes navbar at the top */
+    top: 0;
+    left: 0;
     width: 100%;
-    background-color: #333;
+    background-color: #CC0033;
     color: #fff;
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding: 1rem 2rem;
     box-sizing: border-box;
+    z-index: 1000; /* Keeps it on top of other content */
 }
 
 .navbar-logo {
@@ -21,16 +27,15 @@ body {
 }
 
 .navbar-logo a {
-    text-decoration: none; /* Removes underline */
-    color: #fff; /* Sets the color to white */
-    font-size: 1.5rem; /* Matches font size with logo */
-    font-weight: bold; /* Matches bold text styling */
+    text-decoration: none;
+    color: #fff;
+    font-size: 1.5rem;
+    font-weight: bold;
 }
 
 .navbar-logo a:hover {
     color: #00aaff; /* Optional: Adds hover effect if needed */
 }
-
 
 .navbar-links {
     list-style: none;
@@ -53,4 +58,9 @@ body {
 
 .navbar-links a:hover {
     color: #00aaff;
+}
+
+/* To avoid content being hidden behind the navbar */
+body {
+    padding-top: 70px; /* Adjust this value according to navbar height */
 }

@@ -4,7 +4,6 @@ import Navbar from '../components/Navbar';
 import Home from '../components/Home';
 
 
-
 function Landing() {
     return (
         <div className="app-container">

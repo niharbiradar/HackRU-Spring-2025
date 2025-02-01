@@ -1,11 +1,9 @@
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import Login from './pages/Login';
-import Navbar from './components/Navbar';
+
 import Landing from './pages/Landing';
-
-const Home = () => <h1>Home Page</h1>;
-
+import RidesPage from './pages/RidesPage';
 
 
 function App() {
@@ -15,6 +13,7 @@ function App() {
                 <Routes>
                     <Route path="/" element={<Login />} />
                     <Route path="/Landing/*" element={<Landing />} />
+                    <Route path="/Rides" element={<RidesPage />} />
                 </Routes>
             </main>
         </div>

@@ -7,12 +7,12 @@ const Navbar = () => {
         <nav className="navbar">
 
             <div className="navbar-logo">
-                <Link to="/Home">Student Ride Share</Link> {/* Link to the home route */}
+                <Link to="/Landing">Student Ride Share</Link> {/* Link to the home route */}
             </div>
 
             <ul className="navbar-links">
-                <li><Link to="/Home">Home</Link></li>
-                <li><Link to="/about">Rides</Link></li>
+                <li><Link to="/Landing">Home</Link></li>
+                <li><Link to="/Rides">Rides</Link></li>
             </ul>
         </nav>
     );
