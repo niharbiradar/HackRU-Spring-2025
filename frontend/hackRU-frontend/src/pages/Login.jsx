@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import Cookies from "js-cookie";
+import Swal from 'sweetalert2'
 
 export default function Login() {
   const navigate = useNavigate();
@@ -15,16 +16,43 @@ export default function Login() {
     window.location.href = targetUrl;
   };
 
+  const showAlert = () => {
+        //write command to get driver details based on the driver id
+        Swal.fire({
+          title: `.edu email is required`,
+          icon: 'warning', // You can use 'warning', 'info', 'success', etc.
+          confirmButtonText: 'OK'
+        });
+      };
+
+
   useEffect(() => {
     const accessTokenRegex = /access_token=([^&]+)/;
     const isMatch = window.location.href.match(accessTokenRegex);
-
+  
     if (isMatch) {
       const accessToken = isMatch[1];
       Cookies.set("access_token", accessToken);
-      setIsLoggedin(true);
+  
+      // Fetch user info from Google
+      fetch("https://www.googleapis.com/oauth2/v2/userinfo", {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.email && data.email.endsWith(".edu")) {
+            setIsLoggedin(true);
+          } else {
+              showAlert();           
+              Cookies.remove("access_token"); // Remove invalid session
+          }
+        })
+        .catch((error) => {
+          console.error("Error fetching user info:", error);
+        });
     }
   }, []);
+  
 
   useEffect(() => {
     if (isLoggedin) {
