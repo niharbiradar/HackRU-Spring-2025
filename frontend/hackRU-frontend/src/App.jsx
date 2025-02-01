@@ -1,24 +1,19 @@
-import React from 'react';
-import { Routes, Route } from 'react-router-dom';
-import Login from './pages/Login';
-import Navbar from './components/Navbar';
-import Landing from './pages/Landing';
-
-const Home = () => <h1>Home Page</h1>;
-
-
+import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import Login from "./pages/Login";
+import Landing from "./pages/Landing";
+import "./App.css";
 
 function App() {
-    return (
-        <div className="app-container">
-            <main className="main-content">
-                <Routes>
-                    <Route path="/" element={<Login />} />
-                    <Route path="/Landing/*" element={<Landing />} />
-                </Routes>
-            </main>
-        </div>
-    );
+  return (
+    <>
+      <Router>
+        <Routes>
+          <Route path="/" element={<Login />} />
+          <Route path="/landing" element={<Landing />} />
+        </Routes>
+      </Router>
+    </>
+  );
 }
 
 export default App;
