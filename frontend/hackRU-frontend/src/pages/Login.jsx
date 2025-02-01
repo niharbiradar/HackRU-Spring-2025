@@ -41,10 +41,25 @@ export default function Login() {
         .then((response) => response.json())
         .then((data) => {
           if (data.email && data.email.endsWith(".edu")) {
-            setIsLoggedin(true);
+            const emailAddress = data.email;
+            // check if email address exists
+            fetch(`http://localhost:8000/api/users/check_email?email=${encodeURIComponent(emailAddress)}`)
+              .then((res) => res.json())
+              .then((resData) => {
+                if (resData.exists) {
+                  setIsLoggedin(true);
+                  navigate("/landing");
+                } else {
+                  // if email address is valid but not found, send to onboarding. 
+                  navigate("/onboarding")
+                }
+              })
+              .catch((err) => {
+                console.error('Error checking email:', err);
+              });
           } else {
-              showAlert();           
-              Cookies.remove("access_token"); // Remove invalid session
+            showAlert();
+            Cookies.remove("access_token"); // Remove invalid session
           }
         })
         .catch((error) => {
