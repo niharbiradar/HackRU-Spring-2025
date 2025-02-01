@@ -5,6 +5,11 @@ from flask import Flask
 from flask_restx import Api, Resource, fields
 from flask_pymongo import PyMongo
 
+# Import routers 
+from app.routers.users import router as users_router
+from app.routers.rides import router as rides_router
+
+
 mongo = PyMongo()
 
 def create_app():
@@ -29,6 +34,10 @@ def create_app():
         description='API for managing users, rides, and payments in a campus rideshare system.',
         doc='/docs'  # Enable Swagger UI at /docs
     )
+
+    # Register routers
+    app.register_blueprint(users_router, url_prefix='/api/users')
+    app.register_blueprint(rides_router, url_prefix='/api/rides')
 
     # Define a namespace for users
     users_ns = api.namespace('users', description='User operations')
