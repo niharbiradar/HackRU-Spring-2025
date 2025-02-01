@@ -6,126 +6,237 @@ username = 'niharbiradar'
 password = 'Pillow007$$'  # Replace with your actual password
 cluster_name = 'campusridesharedb.marsf.mongodb.net'
 
-# Connect to MongoDB Atlas
-connection_string = f"mongodb+srv://{username}:{password}@{cluster_name}/?retryWrites=true&w=majority"
+from pymongo import MongoClient
+from pymongo.errors import CollectionInvalid
+import datetime
 
-client = MongoClient(connection_string)
-
-# Choose the database (create if doesn't exist)
+# Connect to MongoDB
+client = MongoClient('mongodb://localhost:27017/')
 db = client['CampusRideshare']
 
+def setup_rides_collection():
+    # Create or get the rides collection
+    try:
+        db.create_collection('rides')
+    except CollectionInvalid:
+        print("Rides collection already exists")
 
+    rides = db.rides
 
-# Define Collections
+    # Create indexes for rides
+    rides.create_index([("ride_id", 1)], unique=True)
+    rides.create_index([("driver_id", 1)])
+    rides.create_index([("rider_id", 1)])
+    rides.create_index([("ride_time", 1)])
+    rides.create_index([("status", 1)])
 
-# Users Collection
-users = db['users']
-users_schema = {
-    "user_id": "unique_user_id",
-    "email": "student_email@university.edu",
-    "name": "Full Name",
-    "user_type": "rider/driver",  # Defines if user is a driver or rider
-    "university_email_verified": True,
-    "profile_picture": "url_of_profile_picture",
-    "emergency_contacts": [
-        {"name": "Emergency Contact Name", "phone": "123-456-7890"}
-    ],
-    "created_at": datetime.utcnow()
-}
+    # Rides validator
+    rides_validator = {
+        "$jsonSchema": {
+            "bsonType": "object",
+            "required": ["ride_id", "driver_id", "start_location", "end_location", 
+                        "ride_time", "status", "available_seats", "total_seats"],
+            "properties": {
+                "ride_id": {
+                    "bsonType": "string",
+                    "description": "must be a string and is required"
+                },
+                "rider_id": {
+                    "bsonType": "string",
+                    "description": "must be a string"
+                },
+                "driver_id": {
+                    "bsonType": "string",
+                    "description": "must be a string and is required"
+                },
+                "start_location": {
+                    "bsonType": "string",
+                    "description": "must be a string and is required"
+                },
+                "end_location": {
+                    "bsonType": "string",
+                    "description": "must be a string and is required"
+                },
+                "ride_time": {
+                    "bsonType": "date",
+                    "description": "must be a date and is required"
+                },
+                "ride_date": {
+                    "bsonType": "date",
+                    "description": "must be a date"
+                },
+                "status": {
+                    "enum": ["pending", "active", "completed", "cancelled"],
+                    "description": "can only be one of the enum values"
+                },
+                "payment_status": {
+                    "enum": ["pending", "paid", "refunded"],
+                    "description": "can only be one of the enum values"
+                },
+                "rating": {
+                    "bsonType": ["int", "null"],
+                    "minimum": 1,
+                    "maximum": 5,
+                    "description": "must be an integer between 1 and 5 or null"
+                },
+                "available_seats": {
+                    "bsonType": "int",
+                    "minimum": 0,
+                    "description": "must be an integer greater than or equal to 0"
+                },
+                "total_seats": {
+                    "bsonType": "int",
+                    "minimum": 1,
+                    "description": "must be an integer greater than 0"
+                },
+                "price": {
+                    "bsonType": "double",
+                    "minimum": 0,
+                    "description": "must be a non-negative number"
+                },
+                "repeat_ride": {
+                    "bsonType": "bool",
+                    "description": "must be a boolean"
+                },
+                "repeat_days": {
+                    "bsonType": "array",
+                    "items": {
+                        "bsonType": "string"
+                    }
+                }
+            }
+        }
+    }
 
-# Example user insertion (rider)
-users.insert_one(users_schema)
+    # Update rides collection with validator
+    db.command({
+        'collMod': 'rides',
+        'validator': rides_validator,
+        'validationLevel': 'moderate'
+    })
 
-# Drivers Collection
-drivers = db['drivers']
-drivers_schema = {
-    "user_id": "unique_driver_id",
-    "vehicle_type": "sedan/suv",
-    "vehicle_model": "Toyota Corolla",
-    "vehicle_plate": "XYZ123",
-    "availability": [
-        {"day": "Monday", "time": "9:00AM-12:00PM"},
-        {"day": "Wednesday", "time": "1:00PM-3:00PM"}
-    ],
-    "rating": 4.7,  # Average rating based on feedback
-    "created_at": datetime.utcnow()
-}
+def setup_bookings_collection():
+    # Create or get the bookings collection
+    try:
+        db.create_collection('bookings')
+    except CollectionInvalid:
+        print("Bookings collection already exists")
 
-# Example driver insertion
-drivers.insert_one(drivers_schema)
+    bookings = db.bookings
 
-# Rides Collection
-rides = db['rides']
-rides_schema = {
-    "ride_id": "unique_ride_id",
-    "rider_id": "unique_user_id",  # Refers to a user in 'users'
-    "driver_id": "unique_driver_id",  # Refers to a user in 'drivers'
-    "start_location": "Campus Building A",
-    "end_location": "Campus Building B",
-    "ride_time": "2025-01-30T08:00:00Z",  # ISO format timestamp
-    "status": "completed",  # or "pending", "cancelled"
-    "payment_status": "paid",  # or "pending"
-    "rating": 5,  # Rating given after ride
-    "created_at": datetime.utcnow()
-}
+    # Create indexes for bookings
+    bookings.create_index([("booking_id", 1)], unique=True)
+    bookings.create_index([("ride_id", 1)])
+    bookings.create_index([("rider_id", 1)])
+    bookings.create_index([("driver_id", 1)])
+    bookings.create_index([("status", 1)])
 
-# Example ride insertion
-rides.insert_one(rides_schema)
+    # Bookings validator
+    bookings_validator = {
+        "$jsonSchema": {
+            "bsonType": "object",
+            "required": ["booking_id", "ride_id", "rider_id", "driver_id", 
+                        "status", "number_of_seats"],
+            "properties": {
+                "booking_id": {
+                    "bsonType": "string",
+                    "description": "must be a string and is required"
+                },
+                "ride_id": {
+                    "bsonType": "string",
+                    "description": "must be a string and is required"
+                },
+                "rider_id": {
+                    "bsonType": "string",
+                    "description": "must be a string and is required"
+                },
+                "driver_id": {
+                    "bsonType": "string",
+                    "description": "must be a string and is required"
+                },
+                "status": {
+                    "enum": ["pending", "accepted", "rejected", "completed", "cancelled"],
+                    "description": "can only be one of the enum values"
+                },
+                "number_of_seats": {
+                    "bsonType": "int",
+                    "minimum": 1,
+                    "description": "must be an integer greater than 0"
+                },
+                "pickup_location": {
+                    "bsonType": "string",
+                    "description": "must be a string"
+                },
+                "created_at": {
+                    "bsonType": "date",
+                    "description": "must be a date"
+                },
+                "updated_at": {
+                    "bsonType": "date",
+                    "description": "must be a date"
+                }
+            }
+        }
+    }
 
-# Payments Collection
-payments = db['payments']
-payments_schema = {
-    "payment_id": "unique_payment_id",
-    "ride_id": "unique_ride_id",  # Refers to ride in 'rides'
-    "amount": 10.00,  # Payment amount
-    "payment_method": "credit_card",  # Could be "paypal", "stripe", etc.
-    "payment_status": "completed",  # or "pending", "failed"
-    "created_at": datetime.utcnow()
-}
+    # Update bookings collection with validator
+    db.command({
+        'collMod': 'bookings',
+        'validator': bookings_validator,
+        'validationLevel': 'moderate'
+    })
 
-# Example payment insertion
-payments.insert_one(payments_schema)
+def insert_example_documents():
+    # Example ride document
+    example_ride = {
+        "ride_id": "ride_123",
+        "driver_id": "driver_456",
+        "start_location": "Campus Center",
+        "end_location": "Engineering Building",
+        "ride_time": datetime.datetime.utcnow(),
+        "ride_date": datetime.datetime.utcnow().date(),
+        "status": "pending",
+        "payment_status": "pending",
+        "available_seats": 3,
+        "total_seats": 4,
+        "price": 5.00,
+        "repeat_ride": False,
+        "repeat_days": [],
+        "created_at": datetime.datetime.utcnow()
+    }
 
-# Ratings and Reviews Collection
-ratings_reviews = db['ratings_reviews']
-ratings_reviews_schema = {
-    "ride_id": "unique_ride_id",  # Refers to ride in 'rides'
-    "rider_id": "unique_rider_id",  # Refers to user in 'users'
-    "driver_id": "unique_driver_id",  # Refers to user in 'drivers'
-    "rating": 4,  # Rating between 1 and 5
-    "review": "Great ride, would recommend!",
-    "created_at": datetime.utcnow()
-}
+    # Example booking document
+    example_booking = {
+        "booking_id": "booking_789",
+        "ride_id": "ride_123",
+        "rider_id": "rider_101",
+        "driver_id": "driver_456",
+        "status": "pending",
+        "number_of_seats": 1,
+        "pickup_location": "Campus Center",
+        "created_at": datetime.datetime.utcnow(),
+        "updated_at": datetime.datetime.utcnow()
+    }
 
-# Example rating/review insertion
-ratings_reviews.insert_one(ratings_reviews_schema)
+    try:
+        db.rides.insert_one(example_ride)
+        print("Inserted example ride")
+        db.bookings.insert_one(example_booking)
+        print("Inserted example booking")
+    except Exception as e:
+        print(f"Error inserting example documents: {e}")
 
-# Driver Availability Collection
-driver_availability = db['driver_availability']
-driver_availability_schema = {
-    "driver_id": "unique_driver_id",  # Refers to driver in 'drivers'
-    "availability": [
-        {"day": "Monday", "time": "9:00AM-12:00PM"},
-        {"day": "Tuesday", "time": "1:00PM-3:00PM"}
-    ],
-    "created_at": datetime.utcnow()
-}
-
-# Example availability insertion
-driver_availability.insert_one(driver_availability_schema)
-
-# Emergency Contacts Collection
-emergency_contacts = db['emergency_contacts']
-emergency_contacts_schema = {
-    "user_id": "unique_user_id",  # Refers to user in 'users'
-    "contacts": [
-        {"name": "John Doe", "phone": "123-456-7890", "relationship": "Friend"},
-        {"name": "Jane Doe", "phone": "987-654-3210", "relationship": "Family"}
-    ],
-    "created_at": datetime.utcnow()
-}
-
-# Example emergency contact insertion
-emergency_contacts.insert_one(emergency_contacts_schema)
-
-print("Data has been inserted successfully.")
+if __name__ == "__main__":
+    print("Setting up CampusRideshare database...")
+    setup_rides_collection()
+    setup_bookings_collection()
+    insert_example_documents()
+    
+    # Print collection info
+    print("\nCollection details:")
+    print(f"Rides collection - Number of documents: {db.rides.count_documents({})}")
+    print(f"Bookings collection - Number of documents: {db.bookings.count_documents({})}")
+    print("\nRides indexes:", db.rides.index_information())
+    print("\nBookings indexes:", db.bookings.index_information())
+    
+    print("\nSetup complete!")
