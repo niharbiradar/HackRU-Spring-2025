@@ -41,6 +41,7 @@ export default function Login() {
         .then((response) => response.json())
         .then((data) => {
           if (data.email && data.email.endsWith(".edu")) {
+            const emailAddress = data.email
             setIsLoggedin(true);
           } else {
               showAlert();           
@@ -63,7 +64,7 @@ export default function Login() {
   return (
     <div className="root">
       <div>
-        <h1>Log in with Google</h1>
+        <h1>Continue With Google</h1>
         <div className="btn-container">
           <button className="btn btn-primary" onClick={handleClick}>
             <svg
