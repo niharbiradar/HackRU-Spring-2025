@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from bson.objectid import ObjectId
+from bson import ObjectId
 from datetime import datetime
 from ..database import mongo
 
@@ -27,11 +27,20 @@ def get_user(user_id):
         return jsonify(serialize_doc(user)), 200
     return jsonify({"message": "User not found"}), 404
 
+# Get all users
+@router.route('/', methods=['GET'])
+def get_users():
+    users = list(mongo.db.users.find())
+    return jsonify([serialize_doc(user) for user in users]), 200
+
 # Update a user by ID
 @router.route('/<user_id>', methods=['PUT'])
 def update_user(user_id):
     data = request.json
-    result = mongo.db.users.update_one({"_id": ObjectId(user_id)}, {"$set": data})
+    result = mongo.db.users.update_one(
+        {"_id": ObjectId(user_id)}, 
+        {"$set": data}
+    )
     if result.matched_count > 0:
         return jsonify({"message": "User updated"}), 200
     return jsonify({"message": "User not found"}), 404
