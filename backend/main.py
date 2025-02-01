@@ -12,7 +12,7 @@ api = Api(
     app,
     version="1.0",
     title="Campus Rideshare API",
-    description="API for managing rides, bookings, and users",
+    description="API for managing rides, bookings, users, and messaging",
     doc="/docs"
 )
 
@@ -20,11 +20,13 @@ api = Api(
 from app.routers.users import users_ns
 from app.routers.rides import rides_ns
 from app.routers.bookings import bookings_ns
+from app.routers.messaging import messaging_ns  # Add messaging routes
 
 # Register namespaces
 api.add_namespace(users_ns, path="/users")
 api.add_namespace(rides_ns, path="/rides")
 api.add_namespace(bookings_ns, path="/bookings")
+api.add_namespace(messaging_ns, path="/messages")  # Add chat APIs
 
 # Default route
 @app.route('/')
@@ -35,10 +37,11 @@ def home():
         "endpoints": {
             "Users": "/users",
             "Rides": "/rides",
-            "Bookings": "/bookings"
+            "Bookings": "/bookings",
+            "Messages": "/messages"
         }
     }
 
-# Run the Flask app
+# Run Flask app
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=8000)

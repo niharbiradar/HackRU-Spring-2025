@@ -26,6 +26,8 @@ services:
     environment:
       - MONGO_INITDB_ROOT_USERNAME=${MONGODB_USERNAME}
       - MONGO_INITDB_ROOT_PASSWORD=${MONGODB_PASSWORD}
+      - GETSTREAM_API_KEY=${GETSTREAM_API_KEY}
+      - GETSTREAM_API_SECRET=${GETSTREAM_API_SECRET}
     volumes:
       - mongo-data:/data/db
 
