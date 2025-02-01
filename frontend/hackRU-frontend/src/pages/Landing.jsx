@@ -1,9 +1,7 @@
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
-import Login from './pages/Login';
-import Navbar from './components/Navbar';
-
-const Home = () => <h1>Home Page</h1>;
+import Navbar from '../components/Navbar';
+import Home from '../components/Home';
 
 
 
@@ -12,12 +10,10 @@ function Landing() {
         <div className="app-container">
           <Navbar />
             <main className="main-content">
-                <Routes>
-                    <Route path="/Landing" element={<Home />} />
-                </Routes>
+                <Home />
             </main>
         </div>
     );
 }
 
-export default App;
+export default Landing;
