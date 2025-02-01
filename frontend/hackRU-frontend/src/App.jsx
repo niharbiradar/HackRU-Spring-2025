@@ -1,23 +1,19 @@
-import React from 'react';
-import { Routes, Route } from 'react-router-dom';
-import Login from './pages/Login';
-
-import Landing from './pages/Landing';
-import RidesPage from './pages/RidesPage';
-
+import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import Login from "./pages/Login";
+import Landing from "./pages/Landing";
+import "./App.css";
 
 function App() {
-    return (
-        <div className="app-container">
-            <main className="main-content">
-                <Routes>
-                    <Route path="/" element={<Login />} />
-                    <Route path="/Landing/*" element={<Landing />} />
-                    <Route path="/Rides" element={<RidesPage />} />
-                </Routes>
-            </main>
-        </div>
-    );
+  return (
+    <>
+      <Router>
+        <Routes>
+          <Route path="/" element={<Login />} />
+          <Route path="/landing" element={<Landing />} />
+        </Routes>
+      </Router>
+    </>
+  );
 }
 
 export default App;
