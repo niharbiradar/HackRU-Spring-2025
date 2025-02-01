@@ -24,14 +24,14 @@ def create_ride():
 @router.route('/', methods=['GET'])
 def get_all_rides():
     rides = mongo.db.rides.find()
-    return jsonify([serialize_doc(ride) for ride in rides]), 200
+    return jsonify([serialize_document(ride) for ride in rides]), 200
 
 # Get a ride by ID
 @router.route('/<ride_id>', methods=['GET'])
 def get_ride(ride_id):
     ride = mongo.db.rides.find_one({"_id": ObjectId(ride_id)})
     if ride:
-        return jsonify(serialize_doc(ride)), 200
+        return jsonify(serialize_document(ride)), 200
     return jsonify({"message": "Ride not found"}), 404
 
 # Update a ride by ID
