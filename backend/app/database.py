@@ -1,6 +1,7 @@
-from flask_pymongo import PyMongo
+from pymongo import MongoClient
+import os
 
-mongo = PyMongo()
-
-def init_db(app):
-    mongo.init_app(app)
+# Load MongoDB URI from environment variables
+MONGO_URI = os.getenv("MONGO_URI", "mongodb://mongo:27017/CampusRideshare")
+client = MongoClient(MONGO_URI)
+db = client.CampusRideshare  # Database instance
