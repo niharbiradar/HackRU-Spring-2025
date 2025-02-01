@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  web:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./backend/.env  # Load environment variables from .env file
+    depends_on:
+      - mongo
+
+  mongo:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=niharbiradar
+      - MONGO_INITDB_ROOT_PASSWORD=Pillow007$$
+    volumes:
+      - mongo-data:/data/db
+
+volumes:
+  mongo-data:
