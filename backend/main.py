@@ -1,29 +1,44 @@
 from flask import Flask
+from flask_restx import Api
 from flask_cors import CORS
-from app.database import mongo
-from app.routers.rides import router as rides_router
-from app.routers.users import router as users_router
+import os
 
+# Initialize Flask app
 app = Flask(__name__)
 CORS(app)
 
-# MongoDB configuration with hardcoded URI
-app.config["MONGO_URI"] = "mongodb+srv://niharbiradar:Pillow007$$@campusridesharedb.marsf.mongodb.net/CampusRideshare?retryWrites=true&w=majority"
-mongo.init_app(app)
+# Initialize API with Swagger UI
+api = Api(
+    app,
+    version="1.0",
+    title="Campus Rideshare API",
+    description="API for managing rides, bookings, and users",
+    doc="/docs"
+)
 
-# Register blueprints
-app.register_blueprint(rides_router, url_prefix='/api/rides')
-app.register_blueprint(users_router, url_prefix='/api/users')
+# Import namespaces AFTER defining the app
+from app.routers.users import users_ns
+from app.routers.rides import rides_ns
+from app.routers.bookings import bookings_ns
 
+# Register namespaces
+api.add_namespace(users_ns, path="/users")
+api.add_namespace(rides_ns, path="/rides")
+api.add_namespace(bookings_ns, path="/bookings")
+
+# Default route
 @app.route('/')
 def home():
     return {
-        'message': 'Campus Rideshare API is running',
-        'endpoints': {
-            'rides': '/api/rides',
-            'users': '/api/users'
+        "message": "Welcome to the Campus Rideshare API",
+        "docs": "/docs",
+        "endpoints": {
+            "Users": "/users",
+            "Rides": "/rides",
+            "Bookings": "/bookings"
         }
     }
 
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8000, debug=True)
+# Run the Flask app
+if __name__ == "__main__":
+    app.run(debug=True, host="0.0.0.0", port=8000)
