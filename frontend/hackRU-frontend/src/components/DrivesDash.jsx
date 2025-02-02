@@ -173,10 +173,57 @@ function DrivesDash() {
                         `;
                         container.appendChild(formElement);
     
-                        document.getElementById('submitDrive').addEventListener('click', (e) => {
+                        document.getElementById('driveForm').addEventListener('submit', async (e) => {
                             e.preventDefault();
-                            Swal.close();
-                            console.log("Form Submitted!"); // Replace with actual logic
+                            
+                            const startLocation = document.getElementById('startLocation').value;
+                            const endLocation = document.getElementById('endLocation').value;
+                            const rideTime = document.getElementById('rideTime').value;
+                            const availableSeats = document.getElementById('availableSeats').value;
+                            const totalSeats = document.getElementById('totalSeats').value;
+    
+                            // Ensure rideTime is properly formatted
+                            const rideDateTime = new Date(`1970-01-01T${rideTime}:00Z`);
+    
+                            const driveData = {
+                                ride_id: generateUUID(),
+                                driver_id: "2b63b92f-41b7-4673-9b5d-c4dd199034c6", // Replace with actual driver ID
+                                driver_name: "Full Name", // Replace with actual driver name
+                                driver_picture: "url_of_profile_picture", // Replace with actual driver picture URL
+                                start_location: startLocation,
+                                end_location: endLocation,
+                                ride_time: rideDateTime.toISOString(),
+                                status: "scheduled",
+                                available_seats: parseInt(availableSeats),
+                                total_seats: parseInt(totalSeats),
+                                vehicle_info: {
+                                    type: "sedan/suv", // Replace with actual vehicle type
+                                    model: "Toyota Corolla", // Replace with actual vehicle model
+                                    plate: "ABC123", // Replace with actual vehicle plate
+                                    state: "NJ" // Replace with actual vehicle state
+                                },
+                                created_at: new Date().toISOString()
+                            };
+    
+                            try {
+                                const response = await fetch('http://localhost:8000/api/rides', { // Updated with backend API URL
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json'
+                                    },
+                                    body: JSON.stringify(driveData)
+                                });
+    
+                                if (response.ok) {
+                                    Swal.close();
+                                    alert('Drive posted successfully!');
+                                } else {
+                                    alert('Failed to post drive.');
+                                }
+                            } catch (error) {
+                                console.error('Error:', error);
+                                alert('An error occurred while posting the drive.');
+                            }
                         });
                     });
                 }
@@ -184,6 +231,13 @@ function DrivesDash() {
         });
     };
     
+    function generateUUID() {
+        // Generate a UUID for the ride_id
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+            const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+        });
+    }
 
     return (
         <div>

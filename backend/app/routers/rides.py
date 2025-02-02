@@ -103,6 +103,16 @@ class TestDB(Resource):
 
 @rides_ns.route('/')
 class RideList(Resource):
+    def options(self):
+        """Handle CORS preflight"""
+        response = make_response()
+        response.status_code = 200
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:5173")
+        response.headers.add("Access-Control-Allow-Credentials", "true")
+        response.headers.add("Access-Control-Allow-Headers", "Content-Type, Authorization")
+        response.headers.add("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+        return response
+
     def get(self):
         """Fetch all rides"""
         try:
@@ -141,8 +151,7 @@ class RideList(Resource):
             error_response.headers.add("Access-Control-Allow-Credentials", "true")
             return error_response
 
-
-    @rides_ns.expect(ride_model)  # Assuming you have ride_model defined
+    @rides_ns.expect(ride_model)
     def post(self):
         """Create a new ride"""
         try:
