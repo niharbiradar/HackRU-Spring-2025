@@ -341,7 +341,7 @@ const fetchDriverInfo = async (email) => {
         >
             {/* Main Drive Details */}
             <p><strong>Seats Available:</strong> {ride.available_seats} / {ride.total_seats}</p>
-            <p><strong>Vehicle:</strong> {ride.vehicle_info.vehicle_type} ({ride.vehicle_info.license_plate})</p>
+            <p><strong>Vehicle:</strong> {ride.vehicle_info.type} ({ride.vehicle_info.plate})</p>
 
             {/* Expandable Requests List */}
             {expanded && (
