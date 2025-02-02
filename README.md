@@ -133,20 +133,6 @@ http://localhost:8000/docs
 
 ---
 
-## Environment Variables
-
-The following environment variables are required:
-
-| Variable             | Description                          | Example Value                          |
-|----------------------|--------------------------------------|----------------------------------------|
-| `MONGODB_USERNAME`   | MongoDB username                     | `niharbiradar`                         |
-| `MONGODB_PASSWORD`   | MongoDB password                     | `Password123`                          |
-| `MONGODB_CLUSTER`    | MongoDB cluster URL                  | `campusridesharedb.marsf.mongodb.net`  |
-
-Add these to a `.env` file in the `backend` directory. **Do not commit this file to version control**.
-
----
-
 ## Contributing
 
 We welcome contributions! Here's how you can help:
