@@ -43,7 +43,7 @@ const RequestsDriver = ({ rideId }) => {
             <ul className="requests-list">
                 {bookings.map((booking) => (
                     <li key={booking._id} className="request-item">
-                        <span><strong>User:</strong> {booking.user_id} </span>
+                        <span><strong>User:</strong> {booking.rider_name} </span>
                         <span><strong>Seats:</strong> {booking.seats_booked}</span>
                         <span 
                             className={`request-status ${
