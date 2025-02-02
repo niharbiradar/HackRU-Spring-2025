@@ -1,86 +1,166 @@
-/* Body Styles */
-body {
-    font-family: 'Arial', sans-serif;
-    background-color: #f4f7fa;
-    margin: 0;
-    padding: 0;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    padding-top: 70px; /* Ensure content doesn't get hidden under navbar */
+.rides-page {
+    padding: 20px;
+    min-height: 100vh;
+    background-color: #f0f2f5;
 }
 
-/* Main content wrapper */
-.app-container {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    align-items: center; /* Center content */
+.page-header {
+    text-align: center;
+    margin-bottom: 30px;
 }
 
-/* Main content area */
-.main-content {
-    flex-grow: 1;
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-    padding-top: 20px;
-    width: 100%;
+.page-header h1 {
+    font-size: 28px;
+    color: #1a1f36;
+    margin-bottom: 10px;
 }
 
-/* Card container - Makes sure cards are centered and responsive */
-.card-container {
-    display: flex;
-    flex-direction: row; /* Align items in a row */
-    flex-wrap: wrap; /* Allow items to wrap into multiple rows */
-    gap: 20px;
-    max-width: 1200px;
-    width: 100%;
-    margin: 20px;
-    justify-content: center; /* Center the cards */
-}
-
-/* Ant card styling */
-.ant-card {
-    border-radius: 10px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    background-color: white;
-    overflow: hidden;
-    transition: transform 0.3s ease-in-out, box-shadow 0.3s ease;
-    width: 100%; /* Take up all available width */
-    max-width: 900px; /* Limit the max width of the card */
-}
-
-.ant-card:hover {
-    transform: translateY(-10px);
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
-}
-
-.ant-card-head {
-    background-color: #1890ff;
-    color: white;
-    font-weight: 600;
+.page-header p {
+    color: #4a5568;
     font-size: 16px;
 }
 
-.ant-card-body {
-    padding: 20px;
+.card-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 24px;
+    max-width: 1400px;
+    margin: 0 auto;
 }
 
-.ant-card-body p {
-    margin: 5px 0;
-    font-size: 14px;
-    color: #555;
+.ride-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
 }
 
-.ant-card-actions a {
-    text-decoration: none;
+.ride-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.ride-card.scheduled {
+    border-left: 4px solid #52c41a;
+}
+
+.ride-card.in-progress {
+    border-left: 4px solid #1890ff;
+}
+
+.ride-card.completed {
+    border-left: 4px solid #8c8c8c;
+}
+
+.ride-card.canceled {
+    border-left: 4px solid #f5222d;
+}
+
+.driver-name-link {
     color: #1890ff;
-    font-weight: 600;
+    cursor: pointer;
+    transition: color 0.3s;
 }
 
-.ant-card-actions {
+.driver-name-link:hover {
+    color: #40a9ff;
+    text-decoration: underline;
+}
+
+.ride-details {
+    padding: 8px 0;
+}
+
+.ride-info p {
+    margin-bottom: 12px;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.status {
+    text-transform: capitalize;
+}
+
+.status-scheduled {
+    color: #52c41a;
+}
+
+.status-in-progress {
+    color: #1890ff;
+}
+
+.status-completed {
+    color: #8c8c8c;
+}
+
+.status-canceled {
+    color: #f5222d;
+}
+
+/* Button styles based on status */
+.ant-btn.scheduled {
+    background-color: #52c41a;
+    border-color: #52c41a;
+}
+
+.ant-btn.in-progress {
+    background-color: #1890ff;
+    border-color: #1890ff;
+}
+
+.ant-btn.completed {
+    background-color: #8c8c8c;
+    border-color: #8c8c8c;
+}
+
+.ant-btn.canceled {
+    background-color: #f5222d;
+    border-color: #f5222d;
+}
+
+.loading-container {
     display: flex;
-    justify-content: flex-end;
-    padding: 10px;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 60vh;
+    gap: 16px;
+}
+
+.empty-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 60vh;
+}
+
+.driver-details {
+    padding: 16px;
+}
+
+.driver-info {
+    background: #f8f9fa;
+    padding: 12px;
+    border-radius: 8px;
+    margin-top: 12px;
+}
+
+.driver-info p {
+    margin: 8px 0;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .card-container {
+        grid-template-columns: 1fr;
+        padding: 0 10px;
+    }
+
+    .page-header h1 {
+        font-size: 24px;
+    }
+
+    .ride-card {
+        margin-bottom: 16px;
+    }
 }
