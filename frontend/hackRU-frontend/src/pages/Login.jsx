@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import Cookies from "js-cookie";
-import Swal from 'sweetalert2'
+import Swal from 'sweetalert2';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -17,14 +17,12 @@ export default function Login() {
   };
 
   const showAlert = () => {
-        //write command to get driver details based on the driver id
-        Swal.fire({
-          title: `.edu email is required`,
-          icon: 'warning', // You can use 'warning', 'info', 'success', etc.
-          confirmButtonText: 'OK'
-        });
-      };
-
+    Swal.fire({
+      title: `.edu email is required`,
+      icon: 'warning',
+      confirmButtonText: 'OK'
+    });
+  };
 
   useEffect(() => {
     const accessTokenRegex = /access_token=([^&]+)/;
@@ -33,47 +31,36 @@ export default function Login() {
     if (isMatch) {
       const accessToken = isMatch[1];
       Cookies.set("access_token", accessToken);
-  
+
       // Fetch user info from Google
       fetch("https://www.googleapis.com/oauth2/v2/userinfo", {
         headers: { Authorization: `Bearer ${accessToken}` },
       })
-        .then((response) => response.json())
-        .then((data) => {
-          if (data.email && data.email.endsWith(".edu")) {
-            const emailAddress = data.email;
-            // check if email address exists
-            alert(emailAddress)
-            fetch(`http://localhost:8000/users/check_email?email=${encodeURIComponent(emailAddress)}`, {
-              method: 'GET',
-              credentials: 'include'  // Important!
-            })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.email && data.email.endsWith(".edu")) {
+          const emailAddress = data.email;
+          Cookies.set("user_email", emailAddress);  // ✅ Store email for Onboarding
 
-              .then((res) => res.json())
-              .then((resData) => {
-                alert("resData: " + JSON.stringify(resData))
-                if (resData.exists) {
-                  setIsLoggedin(true);
-                  navigate("/landing");
-                } else {
-                  // if email address is valid but not found, send to onboarding. 
-                  navigate("/onboarding")
-                }
-              })
-              .catch((err) => {
-                console.error('Error checking email:', err);
-              });
-          } else {
-            showAlert();
-            Cookies.remove("access_token"); // Remove invalid session
-          }
-        })
-        .catch((error) => {
-          console.error("Error fetching user info:", error);
-        });
+          fetch(`http://localhost:8000/users/check_email?email=${encodeURIComponent(emailAddress)}`)
+          .then((res) => res.json())
+          .then((resData) => {
+            if (resData.exists) {
+              setIsLoggedin(true);
+              navigate("/rides");
+            } else {
+              navigate("/onboarding");
+            }
+          })
+          .catch((err) => console.error('Error checking email:', err));
+        } else {
+          showAlert();
+          Cookies.remove("access_token");
+        }
+      })
+      .catch((error) => console.error("Error fetching user info:", error));
     }
   }, []);
-  
 
   useEffect(() => {
     if (isLoggedin) {
@@ -86,37 +73,7 @@ export default function Login() {
       <div>
         <h1>Log in with Google</h1>
         <div className="btn-container">
-          <button className="btn btn-primary" onClick={handleClick}>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 326667 333333"
-              shapeRendering="geometricPrecision"
-              textRendering="geometricPrecision"
-              imageRendering="optimizeQuality"
-              fillRule="evenodd"
-              clipRule="evenodd"
-              width={20}
-              height={20}
-            >
-              <path
-                d="M326667 170370c0-13704-1112-23704-3518-34074H166667v61851h91851c-1851 15371-11851 38519-34074 54074l-311 2071 49476 38329 3428 342c31481-29074 49630-71852 49630-122593m0 0z"
-                fill="#4285f4"
-              />
-              <path
-                d="M166667 333333c44999 0 82776-14815 110370-40370l-52593-40742c-14074 9815-32963 16667-57777 16667-44074 0-81481-29073-94816-69258l-1954 166-51447 39815-673 1870c27407 54444 83704 91852 148890 91852z"
-                fill="#34a853"
-              />
-              <path
-                d="M71851 199630c-3518-10370-5555-21482-5555-32963 0-11482 2036-22593 5370-32963l-93-2209-52091-40455-1704 811C6482 114444 1 139814 1 166666s6482 52221 17777 74814l54074-41851m0 0z"
-                fill="#fbbc04"
-              />
-              <path
-                d="M166667 64444c31296 0 52406 13519 64444 24816l47037-45926C249260 16482 211666 1 166667 1 101481 1 45185 37408 17777 91852l53889 41853c13520-40185 50927-69260 95001-69260m0 0z"
-                fill="#ea4335"
-              />
-            </svg>
-            Log in with Google
-          </button>
+          <button className="btn btn-primary" onClick={handleClick}>Log in with Google</button>
         </div>
       </div>
     </div>

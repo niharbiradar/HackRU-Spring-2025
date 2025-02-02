@@ -6,7 +6,7 @@ import os
 # Initialize Flask app
 app = Flask(__name__)
 
-CORS(app, resources={r"/*": {"origins": "http://localhost:5173", "supports_credentials": True}})
+CORS(app, resources={r"/*": {"origins": "http://localhost:5173"}})
 
 
 # Initialize API with Swagger UI
