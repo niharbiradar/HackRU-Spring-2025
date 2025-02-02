@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Space, Card, Button, Collapse, List} from 'antd';
 import rides from '../dummyData/rides.json';
 import '../css/myDrives.css'; // Import the CSS file
@@ -14,8 +14,23 @@ import Cookies from 'js-cookie';
  
 
 function DrivesDash() {
+    const navigate = useNavigate();
     const [driverID, setDriverID] = useState([]);
+    const [rides, setRides] = useState([]);
     const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        // Check if user is logged in
+        const userEmail = Cookies.get('user_email');
+        if (!userEmail) {
+            message.error('Please login first');
+            navigate('/');
+            return;
+        }
+        console.log(userEmail)
+        fetchDriverID();
+        console.log(driverID)
+    }, [navigate]);
 
     const fetchDriverID = async () => {
         try {
@@ -26,7 +41,7 @@ function DrivesDash() {
             }
 
             setLoading(true);
-            const response = await fetch('http://localhost:8000/drivers/', {
+            const response = await fetch('http://localhost:8000/get_user_id?email='+emailAddress, {
                 method: 'GET',
                 credentials: 'include',
                 headers: {
@@ -59,7 +74,7 @@ function DrivesDash() {
             }
 
             setLoading(true);
-            const response = await fetch('http://localhost:8000/rides/driver/<string:driver_id>', {
+            const response = await fetch('http://localhost:8000/rides/driver/'+driverID, {
                 method: 'GET',
                 credentials: 'include',
                 headers: {
