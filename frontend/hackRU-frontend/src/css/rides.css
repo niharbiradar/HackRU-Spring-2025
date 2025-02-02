@@ -1,86 +1,246 @@
-/* Body Styles */
-body {
-    font-family: 'Arial', sans-serif;
-    background-color: #f4f7fa;
-    margin: 0;
-    padding: 0;
-    height: 100%;
+/* General Styles */
+.rides-page {
+    padding: 40px;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #f0f2f5, #e6e9ef);
+    font-family: 'Inter', sans-serif;
+  }
+  
+  .page-header {
+    text-align: center;
+    margin-bottom: 60px;
+  }
+  
+  .page-header h1 {
+    font-size: 48px;
+    color: #1a1f36;
+    margin-bottom: 16px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    text-transform: uppercase;
+  }
+  
+  .page-header p {
+    color: #4a5568;
+    font-size: 18px;
+    font-weight: 400;
+    letter-spacing: 0.5px;
+    max-width: 800px;
+    margin: 0 auto;
+    line-height: 1.6;
+  }
+  
+  /* Rides Section */
+  .rides-section {
+    margin-bottom: 60px;
+  }
+  
+  .rides-section h4 {
+    color: #1a1f36;
+    margin-bottom: 20px;
+    font-size: 28px;
+    font-weight: 600;
+    position: relative;
+    display: inline-block;
+    letter-spacing: 1px;
+  }
+  
+  .rides-section h4::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: -8px;
+    width: 80px;
+    height: 4px;
+    background: linear-gradient(90deg, #6a11cb, #2575fc);
+    border-radius: 2px;
+  }
+  
+  /* Card Layout */
+  .card-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 30px;
+    margin-top: 30px;
+    transition: grid-template-columns 0.3s ease;
+  }
+  
+  .card-container:hover {
+    gap: 40px;
+  }
+  
+  .ride-card {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    overflow: hidden;
+    border: none;
+    position: relative;
+    cursor: pointer;
+  }
+  
+  .ride-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
+  }
+  
+  .ride-card .ride-status {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    padding: 6px 12px;
+    border-radius: 8px;
+    color: white;
+    font-weight: bold;
+    background-color: #3498db;
+  }
+  
+  /* Ride Info */
+  .ride-card-header {
+    background-color: #3498db;
+    padding: 20px;
+    color: white;
+    font-size: 18px;
+    font-weight: 600;
+    border-top-left-radius: 16px;
+    border-top-right-radius: 16px;
+  }
+  
+  .ride-card-body {
+    padding: 20px;
+    background-color: #fff;
+  }
+  
+  .ride-card-body .ride-info {
+    margin-bottom: 15px;
+  }
+  
+  .ride-card-body .ride-info p {
+    font-size: 14px;
+    color: #4a5568;
+    margin-bottom: 10px;
+  }
+  
+  .ride-card-body .ride-info strong {
+    color: #1a1f36;
+    font-weight: 600;
+  }
+  
+  .ride-card-body .ride-info .datetime {
+    font-size: 14px;
+    color: #3498db;
+    font-weight: 500;
+  }
+  
+  .ride-card-body .ride-info .seats {
+    color: #00b894;
+    font-weight: 500;
+  }
+  
+  /* Button Styles */
+  .ant-btn {
+    font-weight: 500;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+  }
+  
+  .ant-btn.available {
+    background: linear-gradient(135deg, #00d2d3, #00b4d8);
+    border: none;
+    color: white;
+  }
+  
+  .ant-btn.available:hover {
+    background: linear-gradient(135deg, #00b4d8, #0096c7);
+  }
+  
+  .ant-btn.pending {
+    background: linear-gradient(135deg, #ff9f43, #ff7f50);
+    border: none;
+    color: white;
+  }
+  
+  .ant-btn.pending:hover {
+    background: linear-gradient(135deg, #ff7f50, #ff6b6b);
+  }
+  
+  /* Loading and Empty States */
+  .loading-container {
     display: flex;
     flex-direction: column;
-    padding-top: 70px; /* Ensure content doesn't get hidden under navbar */
-}
-
-/* Main content wrapper */
-.app-container {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    align-items: center; /* Center content */
-}
-
-/* Main content area */
-.main-content {
-    flex-grow: 1;
+    align-items: center;
+    justify-content: center;
+    height: 60vh;
+    gap: 16px;
+  }
+  
+  .empty-container {
     display: flex;
     justify-content: center;
-    align-items: flex-start;
-    padding-top: 20px;
-    width: 100%;
-}
-
-/* Card container - Makes sure cards are centered and responsive */
-.card-container {
-    display: flex;
-    flex-direction: row; /* Align items in a row */
-    flex-wrap: wrap; /* Allow items to wrap into multiple rows */
-    gap: 20px;
-    max-width: 1200px;
-    width: 100%;
-    margin: 20px;
-    justify-content: center; /* Center the cards */
-}
-
-/* Ant card styling */
-.ant-card {
-    border-radius: 10px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    background-color: white;
-    overflow: hidden;
-    transition: transform 0.3s ease-in-out, box-shadow 0.3s ease;
-    width: 100%; /* Take up all available width */
-    max-width: 900px; /* Limit the max width of the card */
-}
-
-.ant-card:hover {
-    transform: translateY(-10px);
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
-}
-
-.ant-card-head {
-    background-color: #1890ff;
-    color: white;
-    font-weight: 600;
+    align-items: center;
+    height: 60vh;
+  }
+  
+  .empty-container .ant-empty-description {
+    color: #4a5568;
     font-size: 16px;
-}
-
-.ant-card-body {
-    padding: 20px;
-}
-
-.ant-card-body p {
-    margin: 5px 0;
-    font-size: 14px;
-    color: #555;
-}
-
-.ant-card-actions a {
-    text-decoration: none;
-    color: #1890ff;
-    font-weight: 600;
-}
-
-.ant-card-actions {
-    display: flex;
-    justify-content: flex-end;
-    padding: 10px;
-}
+  }
+  
+  /* Driver Details */
+  .driver-name-link {
+    color: #2e86de;
+    cursor: pointer;
+    transition: color 0.3s;
+    font-weight: 500;
+  }
+  
+  .driver-name-link:hover {
+    color: #54a0ff;
+    text-decoration: underline;
+  }
+  
+  .driver-info {
+    padding: 16px;
+    background: #f8f9fa;
+    border-radius: 12px;
+    margin-top: 20px;
+  }
+  
+  .driver-info p {
+    margin: 8px 0;
+    color: #4a5568;
+  }
+  
+  .driver-info strong {
+    color: #1a1f36;
+  }
+  
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    .page-header h1 {
+      font-size: 32px;
+    }
+  
+    .rides-section h4 {
+      font-size: 22px;
+    }
+  
+    .card-container {
+      grid-template-columns: 1fr;
+      gap: 20px;
+    }
+  
+    .ride-card {
+      margin-bottom: 16px;
+    }
+  
+    .ride-card-body .ride-info p {
+      font-size: 14px;
+    }
+  
+    .ride-card-header {
+      font-size: 16px;
+    }
+  }
+  
