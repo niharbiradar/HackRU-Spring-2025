@@ -1,0 +1,57 @@
+[
+    {
+      "_id": "679e66f5b7ef9a81caf87c72",
+      "ride_id": "0a0aabd3-0ea7-4527-8265-47ddc9366010",
+      "driver_id": "unique_user_id",
+      "driver_name": "Full Name",
+      "driver_picture": "url_of_profile_picture",
+      "start_location": "Livingston Student Center",
+      "end_location": "College Ave Student Center",
+      "ride_time": "2025-02-01T19:24:53.126+00:00",
+      "status": "scheduled",
+      "available_seats": 4,
+      "total_seats": 4,
+      "vehicle_info": {
+        "vehicle_type": "Car",
+        "license_plate": "ABC1234"
+      },
+      "created_at": "2025-02-01T18:24:53.126+00:00"
+    },
+    {
+      "_id": "679e66f5b7ef9a81caf87c73",
+      "ride_id": "1b0bbee1-2b43-43b4-8ec6-4bb021be7671",
+      "driver_id": "unique_user_id_2",
+      "driver_name": "Jane Doe",
+      "driver_picture": "url_of_driver_picture_2",
+      "start_location": "Hill Center",
+      "end_location": "Rutgers Business School",
+      "ride_time": "2025-02-02T10:00:00.000+00:00",
+      "status": "scheduled",
+      "available_seats": 3,
+      "total_seats": 4,
+      "vehicle_info": {
+        "vehicle_type": "SUV",
+        "license_plate": "XYZ5678"
+      },
+      "created_at": "2025-02-02T09:30:00.000+00:00"
+    },
+    {
+      "_id": "679e66f5b7ef9a81caf87c74",
+      "ride_id": "5f1cc5f4-32fa-4b6b-bf34-e3c1e2432fdb",
+      "driver_id": "unique_user_id_3",
+      "driver_name": "John Smith",
+      "driver_picture": "url_of_driver_picture_3",
+      "start_location": "College Avenue",
+      "end_location": "Cook Campus",
+      "ride_time": "2025-02-03T14:45:00.000+00:00",
+      "status": "completed",
+      "available_seats": 2,
+      "total_seats": 4,
+      "vehicle_info": {
+        "vehicle_type": "Sedan",
+        "license_plate": "JKL1234"
+      },
+      "created_at": "2025-02-03T14:00:00.000+00:00"
+    }
+  ]
+  
