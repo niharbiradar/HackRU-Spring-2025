@@ -29,6 +29,39 @@ ride_model = rides_ns.model('Ride', {
 })
 
 
+@rides_ns.route('/user/<string:email>')
+class UserRidesAndBookings(Resource):
+    def get(self, email):
+        """Get all rides and bookings"""
+        try:
+            # Get all rides
+            rides = list(db.rides.find())
+            
+            # Get all bookings
+            bookings = list(db.bookings.find())
+
+            # Process the data to make it JSON serializable
+            processed_rides = []
+            for ride in rides:
+                ride_dict = dict(ride)
+                ride_dict['_id'] = str(ride_dict['_id'])
+                processed_rides.append(ride_dict)
+
+            processed_bookings = []
+            for booking in bookings:
+                booking_dict = dict(booking)
+                booking_dict['_id'] = str(booking_dict['_id'])
+                processed_bookings.append(booking_dict)
+
+            return {
+                'rides': processed_rides,
+                'bookings': processed_bookings
+            }
+            
+        except Exception as e:
+            print(f"Error in /rides/user GET: {str(e)}")
+            return {'error': str(e)}, 500
+
 @rides_ns.route('/all')
 class AllRidesAndBookings(Resource):
     def get(self):

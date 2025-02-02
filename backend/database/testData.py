@@ -29,7 +29,7 @@ def generate_test_users():
 
 # Create test data for rides
 def generate_test_rides(user_ids):
-    statuses = ['scheduled', 'in_progress', 'completed', 'cancelled']
+    statuses = ['scheduled', 'available', 'completed', 'cancelled']
     for i in range(1, 11):  # Create 10 test rides
         ride_data = {
             'ride_id': str(uuid.uuid4()),
