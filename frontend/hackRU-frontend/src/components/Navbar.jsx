@@ -1,21 +1,35 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import '../css/navbar.css';
 
 const Navbar = () => {
-    return (
-        <nav className="navbar">
+  const [menuOpen, setMenuOpen] = useState(false);
 
-            <div className="navbar-logo">
-                <Link to="/rides">Student Ride Share</Link> {/* Link to the home route */}
-            </div>
+  const toggleMenu = () => setMenuOpen(!menuOpen);
 
-            <ul className="navbar-links">
-                <li><Link to="/rides">Rides</Link></li>
-                <li><Link to="/myDrives">My Drives</Link></li>
-            </ul>
-        </nav>
-    );
+  return (
+    <nav className="navbar">
+      <div className="navbar-container">
+        <div className="navbar-logo">
+          <Link to="/rides">Campus Ride Share</Link>
+        </div>
+
+        <div className={`navbar-menu ${menuOpen ? 'active' : ''}`}>
+          <Link to="/rides" className="navbar-item">Rides</Link>
+          <Link to="/myDrives" className="navbar-item">My Drives</Link>
+          <div className="search-bar">
+            <input type="text" placeholder="Search..." />
+          </div>
+        </div>
+
+        <div className="navbar-toggle" onClick={toggleMenu}>
+          <div></div>
+          <div></div>
+          <div></div>
+        </div>
+      </div>
+    </nav>
+  );
 };
 
 export default Navbar;

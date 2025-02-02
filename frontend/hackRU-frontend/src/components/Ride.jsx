@@ -54,16 +54,6 @@ const Rides = () => {
       const rides = await ridesResponse.json();
       const bookings = await bookingsResponse.json();
 
-      console.log("Fetched Rides:", rides);
-      console.log("Fetched Bookings:", bookings);
-      
-      // Log unique statuses
-      const rideStatuses = [...new Set(rides.map(ride => ride.status))];
-      const bookingStatuses = [...new Set(bookings.map(booking => booking.status))];
-      
-      console.log("Unique ride statuses:", rideStatuses);
-      console.log("Unique booking statuses:", bookingStatuses);
-
       setRidesData({ rides, bookings });
     } catch (error) {
       console.error("Error fetching rides and bookings:", error);
@@ -87,11 +77,11 @@ const Rides = () => {
           rider_email: userEmail,
         }),
       });
-      
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
+
       message.success('Ride requested successfully!');
       fetchRidesAndBookings(); // Refresh rides list
     } catch (error) {
