@@ -47,7 +47,7 @@ export default function Login() {
           .then((resData) => {
             if (resData.exists) {
               setIsLoggedin(true);
-              navigate("/landing");
+              navigate("/rides");
             } else {
               navigate("/onboarding");
             }
