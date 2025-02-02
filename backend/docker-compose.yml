@@ -2,21 +2,32 @@ version: '3.8'
 
 services:
   web:
-    build: ./backend
+    build: .
     ports:
       - "8000:8000"
     env_file:
-      - ./backend/.env  # Load environment variables from .env file
+      - .env
+    volumes:
+      - .:/backend
+    environment:
+      - FLASK_APP=main.py
+      - FLASK_ENV=development
+      - FLASK_DEBUG=1
     depends_on:
       - mongo
+    command: python main.py
 
   mongo:
     image: mongo:latest
     ports:
       - "27017:27017"
+    env_file:
+      - .env
     environment:
-      - MONGO_INITDB_ROOT_USERNAME=niharbiradar
-      - MONGO_INITDB_ROOT_PASSWORD=Pillow007$$
+      - MONGO_INITDB_ROOT_USERNAME=${MONGODB_USERNAME}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGODB_PASSWORD}
+      - GETSTREAM_API_KEY=${GETSTREAM_API_KEY}
+      - GETSTREAM_API_SECRET=${GETSTREAM_API_SECRET}
     volumes:
       - mongo-data:/data/db
 

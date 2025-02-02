@@ -44,8 +44,8 @@ export default function Login() {
             const emailAddress = data.email
             setIsLoggedin(true);
           } else {
-              showAlert();           
-              Cookies.remove("access_token"); // Remove invalid session
+            showAlert();
+            Cookies.remove("access_token"); // Remove invalid session
           }
         })
         .catch((error) => {

@@ -1,20 +1,24 @@
-# Use an official Python runtime as a parent image
 FROM python:3.9-slim
 
-# Set the working directory in the container
-WORKDIR /app
+WORKDIR /backend
 
-# Copy the requirements file into the container
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+# Upgrade pip
+RUN pip install --no-cache-dir --upgrade pip
+
+# Copy requirements first to leverage Docker cache
 COPY requirements.txt .
-
-# Install any needed packages specified in requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the current directory contents into the container
+# Copy the entire project
 COPY . .
 
-# Make port 8000 available to the world outside this container
+# Expose port
 EXPOSE 8000
 
-# Run the Flask app
-CMD ["python", "app/main.py"]
+# Command to run the application
+CMD ["python", "main.py"]
