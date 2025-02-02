@@ -20,83 +20,91 @@ function DrivesDash() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // Check if user is logged in
-        const userEmail = Cookies.get('user_email');
-        if (!userEmail) {
-            message.error('Please login first');
-            navigate('/');
+        const loadData = async () => {
+            // Check if user is logged in
+            const userEmail = Cookies.get('user_email');
+            if (!userEmail) {
+                message.error('Please login first');
+                navigate('/');
+                return;
+            }
+    
+            // Fetch user details first
+            try {
+                await fetchUser(userEmail);  // Ensure user data is fetched before proceeding
+    
+                // Now fetch rides based on driver ID
+                await fetchRidesbyDriver(driverID);
+                console.log(rides);
+            } catch (error) {
+                console.error("Error during data fetch:", error);
+            }
+        };
+    
+        loadData();  // Call the async function
+    
+    }, [navigate, driverID]);  // Dependencies (navigate, driverID)
+    
+    const fetchUser = async (email) => {
+        try {
+            setLoading(true);
+            const response = await fetch('http://localhost:8000/users/get_user_id?email=' + email, {
+                method: 'GET',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            });
+    
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+    
+            const data = await response.json();
+            console.log("Fetched User:", data); // Debug log
+            setDriverID(data.user_id); // Fix here: set driverID directly as a string
+        } catch (error) {
+            console.error("Error fetching user:", error);
+            message.error('Failed to load user');
+        } finally {
+            setLoading(false);
+        }
+    };
+    
+    const fetchRidesbyDriver = async (driverID) => {
+    try {
+        if (!driverID) {
+            message.error('Driver ID is missing');
             return;
         }
-        console.log(userEmail)
-        fetchDriverID();
+        
+        setLoading(true);
+        console.log("here")
         console.log(driverID)
-    }, [navigate]);
-
-    const fetchDriverID = async () => {
-        try {
-            const emailAddress = Cookies.get("user_email");
-            if (!emailAddress) {
-                message.error('Please login first');
-                navigate('/');
+        const response = await fetch('http://localhost:8000/rides/driver/?driverID='+driverID, {
+            method: 'GET',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json',
             }
+        });
 
-            setLoading(true);
-            const response = await fetch('http://localhost:8000/get_user_id?email='+emailAddress, {
-                method: 'GET',
-                credentials: 'include',
-                headers: {
-                    'Content-Type': 'application/json',
-                }
-            });
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            const data = await response.json();
-            console.log("Fetched rides:", data); // Debug log
-            setDriverID(data);
-
-        } catch (error) {
-            console.error("Error fetching rides:", error);
-            message.error('Failed to load rides');
-        } finally {
-            setLoading(false);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
         }
-    };
 
-    const fetchRidesbyDriver = async () => {
-        try {
-            const emailAddress = Cookies.get("user_email");
-            if (!emailAddress) {
-                message.error('Please login first');
-                navigate('/');
-            }
+        const data = await response.json();
+        console.log("Fetched rides:", data); // Debug log
+        setRides(data);
 
-            setLoading(true);
-            const response = await fetch('http://localhost:8000/rides/driver/'+driverID, {
-                method: 'GET',
-                credentials: 'include',
-                headers: {
-                    'Content-Type': 'application/json',
-                }
-            });
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            const data = await response.json();
-            console.log("Fetched rides:", data); // Debug log
-            setRides(data);
-
-        } catch (error) {
-            console.error("Error fetching rides:", error);
-            message.error('Failed to load rides');
-        } finally {
-            setLoading(false);
-        }
-    };
+    } catch (error) {
+        console.error("Error fetching rides:", error);
+        message.error('Failed to load rides');
+    } finally {
+        setLoading(false);
+    }
+};
+ 
 
     const drive = {
         start_location: "New York, NY",
