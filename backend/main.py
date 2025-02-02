@@ -5,7 +5,8 @@ import os
 
 # Initialize Flask app
 app = Flask(__name__)
-CORS(app)
+CORS(app, resources={r"/*": {"origins": "http://localhost:5173"}}, supports_credentials=True)  # Enable CORS for specific origin
+# CORS(app, resources={r"/*": {"origins": "http://localhost:5173"}})  # Enable CORS for specific origin
 
 # Initialize API with Swagger UI
 api = Api(

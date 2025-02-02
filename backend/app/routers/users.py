@@ -1,4 +1,4 @@
-from flask import request
+from flask import request, jsonify
 from flask_restx import Namespace, Resource, fields
 from bson import ObjectId
 from datetime import datetime
@@ -108,3 +108,61 @@ class AcceptRideRequest(Resource):
             users_ns.abort(404, "Ride request not found")
         db.ride_requests.update_one({'_id': ObjectId(request_id)}, {'$set': {'status': 'accepted'}})
         return {'message': 'Ride request accepted'}, 200
+
+from flask import request
+from flask_restx import Namespace, Resource, fields
+from bson import ObjectId
+from datetime import datetime
+from flask import current_app
+from app.database import db
+
+users_ns = Namespace('users', description='User operations')
+
+# User Model
+user_model = users_ns.model('User', {
+    'user_id': fields.String(required=True, description="Unique User ID"),
+    'email': fields.String(required=True, description="User's university email"),
+    'name': fields.String(required=True, description="Full Name"),
+    'user_type': fields.String(required=True, enum=['rider', 'driver'], description="User role"),
+    'university_email_verified': fields.Boolean(default=False),
+    'profile_picture': fields.String(description="Profile Picture URL"),
+    'vehicle_info': fields.Nested(users_ns.model('Vehicle', {
+        'type': fields.String(description="Vehicle type (sedan, SUV, etc.)"),
+        'model': fields.String(description="Vehicle model"),
+        'plate': fields.String(description="License plate"),
+        'state': fields.String(description="State of registration")
+    }), required=False),
+    'emergency_contacts': fields.List(fields.String, description="List of emergency contacts"),
+    'created_at': fields.DateTime(description="Account creation date"),
+})
+
+# Ride Request Model
+ride_request_model = users_ns.model('RideRequest', {
+    'rider_id': fields.String(required=True, description="ID of the rider requesting a ride"),
+    'pickup_location': fields.String(required=True, description="Rider's pickup location"),
+    'status': fields.String(default='pending', enum=['pending', 'accepted', 'rejected'], description="Status of the ride request"),
+    'created_at': fields.DateTime(description="Request creation timestamp")
+})
+
+# This should only be used for checking if the user has ever signed in before. ask jared if u need
+@users_ns.route('/check_email')
+class CheckEmail(Resource):
+    def options(self):
+        response = jsonify({'message': 'CORS preflight successful'})
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:5173")
+        response.headers.add("Access-Control-Allow-Methods", "GET, OPTIONS")
+        response.headers.add("Access-Control-Allow-Headers", "Content-Type")
+        response.headers.add("Access-Control-Allow-Credentials", "true")
+        return response, 200
+    def get(self):
+        """Check if email exists in the database"""
+        email = request.args.get('email')
+        if not email:
+            return jsonify({'message': 'Email is required'}), 400
+
+        user = db.users.find_one({'email': email})
+        response = jsonify({'exists': bool(user), 'user_id': str(user['_id']) if user else None})
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:5173")
+        response.headers.add("Access-Control-Allow-Credentials", "true")
+        return response
+    

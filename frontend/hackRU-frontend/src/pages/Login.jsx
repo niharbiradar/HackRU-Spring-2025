@@ -42,10 +42,18 @@ export default function Login() {
         .then((data) => {
           if (data.email && data.email.endsWith(".edu")) {
             const emailAddress = data.email;
+            alert("email address: " + emailAddress);
             // check if email address exists
-            fetch(`http://localhost:8000/api/users/check_email?email=${encodeURIComponent(emailAddress)}`)
+            fetch(`http://localhost:8000/users/check_email?email=${encodeURIComponent(emailAddress)}`, {
+                method: "GET",
+                credentials: "include",  // Important for cookies/sessions
+                headers: {
+                "Content-Type": "application/json",
+              },
+            })
               .then((res) => res.json())
               .then((resData) => {
+                alert("resData: " + JSON.stringify(resData));
                 if (resData.exists) {
                   setIsLoggedin(true);
                   navigate("/landing");
