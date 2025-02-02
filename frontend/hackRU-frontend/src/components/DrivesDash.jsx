@@ -12,13 +12,27 @@ import { useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
 import NewDrivePage from '../pages/NewDrive';
 
- 
+function timeToISOString(time) {
+    // Get today's date
+    let today = new Date();
+    
+    // Extract the year, month, and day
+    let year = today.getFullYear();
+    let month = String(today.getMonth() + 1).padStart(2, '0'); // Ensure 2-digit month
+    let day = String(today.getDate()).padStart(2, '0'); // Ensure 2-digit day
+    
+    // Construct the ISO-like date-time string
+    let isoString = `${year}-${month}-${day}T${time}:00`;
+
+    return isoString;
+}
 
 function DrivesDash() {
     const navigate = useNavigate();
     const [driverID, setDriverID] = useState([]);
     const [rides, setRides] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [driverData, setDriverData] = useState(null);
 
     useEffect(() => {
         const loadData = async () => {
@@ -36,6 +50,8 @@ function DrivesDash() {
     
                 // Now fetch rides based on driver ID
                 await fetchRidesbyDriver(driverID);
+
+                await fetchDriverInfo(userEmail);
                 console.log(rides);
             } catch (error) {
                 console.error("Error during data fetch:", error);
@@ -80,8 +96,8 @@ function DrivesDash() {
         }
         
         setLoading(true);
-        console.log("here")
-        console.log(driverID)
+        // console.log("here")
+        // console.log(driverID)
         const response = await fetch('http://localhost:8000/rides/driver/?driverID='+driverID, {
             method: 'GET',
             credentials: 'include',
@@ -105,7 +121,40 @@ function DrivesDash() {
         setLoading(false);
     }
 };
- 
+
+const fetchDriverInfo = async (email) => {
+    try {
+        if (!driverID) {
+            message.error('Driver ID is missing');
+            return;
+        }
+        
+        setLoading(true);
+        // console.log("here")
+        // console.log(driverID)
+        const response = await fetch('http://localhost:8000/users/get_user_details?email=' + email, {
+            method: 'GET',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log("Fetched date about Driver:", data); // Debug log
+        setDriverData(data);
+
+    } catch (error) {
+        console.error("Error fetching rides:", error);
+        message.error('Failed to load rides');
+    } finally {
+        setLoading(false);
+    }
+};
 
     const drive = {
         start_location: "New York, NY",
@@ -183,46 +232,78 @@ function DrivesDash() {
                             const totalSeats = document.getElementById('totalSeats').value;
     
                             // Ensure rideTime is properly formatted
-                            const rideDateTime = new Date(`1970-01-01T${rideTime}:00Z`);
-    
+                            // const rideDateTime = new Date(`1970-01-01T${rideTime}:00Z`);
+                            console.log(rideTime)
+                            const dateObj = timeToISOString(rideTime);
+                            console.log(dateObj)
+                            const isoString = dateObj
+                            console.log("times")
+                            console.log(isoString);
+
+                            // const driveData = {
+                            //     ride_id: generateUUID(),
+                            //     driver_id: "2b63b92f-41b7-4673-9b5d-c4dd199034c6", // Replace with actual driver ID
+                            //     driver_name: "Test Driver MM", // Replace with actual driver name
+                            //     driver_picture: null, // Replace with actual driver picture URL
+                            //     start_location: startLocation,
+                            //     end_location: endLocation,
+                            //     ride_time: "1989-02-02T12:30:00",
+                            //     status: "scheduled",
+                            //     available_seats: parseInt(availableSeats),
+                            //     total_seats: parseInt(totalSeats),
+                            //     vehicle_info: {
+                            //         type: "sedan/suv", // Replace with actual vehicle type
+                            //         model: "Toyota Corolla", // Replace with actual vehicle model
+                            //         plate: "ABC123", // Replace with actual vehicle plate
+                            //         state: "NJ" // Replace with actual vehicle state
+                            //     },
+                            //     created_at: new Date().toISOString()
+                            // };
+
                             const driveData = {
                                 ride_id: generateUUID(),
-                                driver_id: "2b63b92f-41b7-4673-9b5d-c4dd199034c6", // Replace with actual driver ID
-                                driver_name: "Full Name", // Replace with actual driver name
-                                driver_picture: "url_of_profile_picture", // Replace with actual driver picture URL
+                                driver_id: driverID, 
+                                driver_name: driverData['name'], // same thing
+                                driver_picture: null,
                                 start_location: startLocation,
                                 end_location: endLocation,
-                                ride_time: rideDateTime.toISOString(),
+                                ride_time: isoString, // get this from the form
                                 status: "scheduled",
                                 available_seats: parseInt(availableSeats),
                                 total_seats: parseInt(totalSeats),
                                 vehicle_info: {
-                                    type: "sedan/suv", // Replace with actual vehicle type
-                                    model: "Toyota Corolla", // Replace with actual vehicle model
-                                    plate: "ABC123", // Replace with actual vehicle plate
-                                    state: "NJ" // Replace with actual vehicle state
+                                    type: "sedan/suv",
+                                    model: driverData['vehicle_info']['model'],
+                                    plate: driverData['vehicle_info']['plate'],
+                                    state: driverData['vehicle_info']['state']
+                                    // get this from the user
                                 },
                                 created_at: new Date().toISOString()
-                            };
+                            }
     
                             try {
-                                const response = await fetch('http://localhost:8000/api/rides', { // Updated with backend API URL
-                                    method: 'POST',
+                                console.log("Drive Data:", driveData);
+                                const response = await fetch("http://localhost:8000/rides/addRide", {
+                                    method: "POST",
+                                    credentials: "include",
                                     headers: {
-                                        'Content-Type': 'application/json'
+                                        "Content-Type": "application/json",
                                     },
-                                    body: JSON.stringify(driveData)
+                                    body: JSON.stringify(driveData),
                                 });
-    
+                    
                                 if (response.ok) {
                                     Swal.close();
                                     alert('Drive posted successfully!');
                                 } else {
                                     alert('Failed to post drive.');
                                 }
-                            } catch (error) {
-                                console.error('Error:', error);
-                                alert('An error occurred while posting the drive.');
+                    
+                                const data = await response.json();
+                                console.log("New Drive successful:", data);
+    
+                            }catch (err) {
+                                console.error("Error submitting onboarding form:", err);
                             }
                         });
                     });

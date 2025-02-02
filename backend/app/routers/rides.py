@@ -235,3 +235,43 @@ class RideMatch(Resource):
             return {'message': 'No matching rides found'}, 404
         
         return [{'_id': str(ride['_id']), **ride} for ride in matched_rides], 200
+
+
+@rides_ns.route('/addRide')
+class AddRide(Resource):
+    def post(self):
+        """Add a new ride to the database"""
+        try:
+            data = request.get_json()
+
+            # Ensure required fields exist
+            required_fields = ["driver_id", "driver_name", "driver_picture", "start_location", "end_location", "ride_time", "available_seats", "total_seats", "vehicle_info"]
+            for field in required_fields:
+                if field not in data:
+                    return make_response(jsonify({'error': f'Missing required field: {field}'}), 400)
+
+            # Convert ride_time to datetime format
+            try:
+                data['ride_time'] = datetime.fromisoformat(data['ride_time'])
+            except ValueError:
+                return make_response(jsonify({'error': 'Invalid ride_time format. Must be ISO format'}), 400)
+
+            # Generate a unique ride ID if not provided
+            if 'ride_id' not in data:
+                data['ride_id'] = str(uuid.uuid4())
+
+            # Ensure created_at timestamp
+            data['created_at'] = datetime.utcnow()
+
+            # Insert into MongoDB
+            result = db.rides.insert_one(data)
+            data['_id'] = str(result.inserted_id)
+
+            # Response with created ride details
+            response = make_response(jsonify(data), 201)
+            response.headers.add("Access-Control-Allow-Origin", "http://localhost:5173")
+            response.headers.add("Access-Control-Allow-Credentials", "true")
+            return response
+
+        except Exception as e:
+            return make_response(jsonify({'error': str(e)}), 500)

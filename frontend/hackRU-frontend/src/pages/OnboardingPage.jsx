@@ -89,6 +89,8 @@ const OnboardingPage = () => {
     
                 if (formData.profilePicture) {
                     formDataToSend.append('profilePicture', formData.profilePicture);
+                } else {
+                    formDataToSend.append('profilePicture', null);
                 }
     
                 if (isDriver) {

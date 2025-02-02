@@ -299,3 +299,23 @@ class GetUserID(Resource):
             return response
         except Exception as e:
             return jsonify({'error': str(e)}), 500
+
+@users_ns.route('/get_user_details')
+class GetUserDetails(Resource):
+    def get(self):
+        """Get user details (name, profile_picture, vehicle) by email"""
+        try:
+            email = request.args.get('email')
+            if not email:
+                return make_response(jsonify({'error': 'Email parameter is required'}), 400)
+
+            # Query MongoDB for the user
+            user = db.users.find_one({"email": email}, {"_id": 0, "name": 1, "profile_picture": 1, "vehicle_info": 1})
+
+            if not user:
+                return make_response(jsonify({'error': 'User not found'}), 404)
+
+            return make_response(jsonify(user), 200)
+
+        except Exception as e:
+            return make_response(jsonify({'error': str(e)}), 500)
