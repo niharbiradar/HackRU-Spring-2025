@@ -134,17 +134,13 @@ const Rides = () => {
 
   const filterRidesByStatus = (statuses) => {
     return ridesData.rides.filter((ride) => 
-      statuses.some(status => 
-        ride.status.toLowerCase() === status.toLowerCase()
-      )
+      statuses.includes(ride.status.toLowerCase())
     );
   };
 
   const filterBookingsByStatus = (statuses) => {
     return ridesData.bookings.filter((booking) => 
-      statuses.some(status => 
-        booking.status.toLowerCase() === status.toLowerCase()
-      )
+      statuses.includes(booking.status.toLowerCase())
     );
   };
 
@@ -228,21 +224,7 @@ const Rides = () => {
         <Text type="secondary">Click on the driver's name to see more details</Text>
       </div>
 
-      {/* Section 1: Active Rides */}
-      <div className="rides-section">
-        <Title level={4}>Active Rides</Title>
-        <div className="card-container">
-          {filterRidesByStatus(['pending', 'in_progress', 'accepted']).length > 0 ? (
-            filterRidesByStatus(['pending', 'in_progress', 'accepted']).map((ride) =>
-              renderRideCard(ride)
-            )
-          ) : (
-            <Empty description="No active rides" />
-          )}
-        </div>
-      </div>
-
-      {/* Section 2: Available Rides */}
+      {/* Section 1: Available Rides */}
       <div className="rides-section">
         <Title level={4}>Available Rides</Title>
         <div className="card-container">
@@ -254,16 +236,32 @@ const Rides = () => {
         </div>
       </div>
 
-      {/* Section 3: Completed/Rejected Rides */}
+      {/* Section 2: Active Rides */}
       <div className="rides-section">
-        <Title level={4}>Completed/Rejected Rides</Title>
+        <Title level={4}>Active Rides</Title>
         <div className="card-container">
-          {filterRidesByStatus(['completed', 'rejected']).length > 0 ? (
-            filterRidesByStatus(['completed', 'rejected']).map((ride) =>
-              renderRideCard(ride)
-            )
+          {filterBookingsByStatus(['scheduled']).length > 0 ? (
+            filterBookingsByStatus(['scheduled']).map((booking) => {
+              const ride = ridesData.rides.find(ride => ride.ride_id === booking.ride_id);
+              return ride && renderRideCard(ride);
+            })
           ) : (
-            <Empty description="No completed or rejected rides" />
+            <Empty description="No active rides" />
+          )}
+        </div>
+      </div>
+
+      {/* Section 3: Completed/Rejected/Canceled Rides */}
+      <div className="rides-section">
+        <Title level={4}>Completed, Rejected, or Canceled Rides</Title>
+        <div className="card-container">
+          {filterBookingsByStatus(['completed', 'rejected', 'canceled']).length > 0 ? (
+            filterBookingsByStatus(['completed', 'rejected', 'canceled']).map((booking) => {
+              const ride = ridesData.rides.find(ride => ride.ride_id === booking.ride_id);
+              return ride && renderRideCard(ride);
+            })
+          ) : (
+            <Empty description="No completed, rejected, or canceled rides" />
           )}
         </div>
       </div>

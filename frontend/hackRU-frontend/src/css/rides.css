@@ -78,6 +78,7 @@
     border: none;
     position: relative;
     cursor: pointer;
+    height: 100%;
   }
   
   .ride-card:hover {
@@ -94,6 +95,7 @@
     color: white;
     font-weight: bold;
     background-color: #3498db;
+    font-size: 12px;
   }
   
   /* Ride Info */
