@@ -235,3 +235,22 @@ class EmailVerification(Resource):
             return handle_cors_response(jsonify({'message': 'Email verified successfully'}))
         except Exception as e:
             return handle_cors_response(jsonify({'error': str(e)})), 500
+
+@users_ns.route('/get_user_id')
+class GetUserByEmail(Resource):
+    def get(self):
+        """Get user by email"""
+        try:
+            email = request.args.get('email')
+            if not email:
+                return handle_cors_response(jsonify({'error': 'Email is required'})), 400
+
+            # Assuming 'db.users' is your MongoDB collection
+            user = db.users.find_one({'email': email})
+
+            if user:
+                return handle_cors_response(jsonify({'user_id': user['user_id']}))
+            else:
+                return handle_cors_response(jsonify({'error': 'User not found'})), 404
+        except Exception as e:
+            return handle_cors_response(jsonify({'error': str(e)})), 500

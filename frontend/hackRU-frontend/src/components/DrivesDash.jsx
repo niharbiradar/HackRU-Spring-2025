@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Space, Card, Button, Collapse, List} from 'antd';
 import rides from '../dummyData/rides.json';
 import '../css/myDrives.css'; // Import the CSS file
@@ -8,11 +8,96 @@ import SpeedDial from '@mui/material/SpeedDial';
 import SpeedDialIcon from '@mui/material/SpeedDialIcon';
 import SpeedDialAction from '@mui/material/SpeedDialAction';
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
+import { useNavigate } from 'react-router-dom';
+import Cookies from 'js-cookie';
+import NewDrivePage from '../pages/NewDrive';
 
  
 
 function DrivesDash() {
+    const navigate = useNavigate();
+    const [driverID, setDriverID] = useState([]);
+    const [rides, setRides] = useState([]);
+    const [loading, setLoading] = useState(true);
 
+    useEffect(() => {
+        // Check if user is logged in
+        const userEmail = Cookies.get('user_email');
+        if (!userEmail) {
+            message.error('Please login first');
+            navigate('/');
+            return;
+        }
+        console.log(userEmail)
+        fetchDriverID();
+        console.log(driverID)
+    }, [navigate]);
+
+    const fetchDriverID = async () => {
+        try {
+            const emailAddress = Cookies.get("user_email");
+            if (!emailAddress) {
+                message.error('Please login first');
+                navigate('/');
+            }
+
+            setLoading(true);
+            const response = await fetch('http://localhost:8000/get_user_id?email='+emailAddress, {
+                method: 'GET',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            console.log("Fetched rides:", data); // Debug log
+            setDriverID(data);
+
+        } catch (error) {
+            console.error("Error fetching rides:", error);
+            message.error('Failed to load rides');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const fetchRidesbyDriver = async () => {
+        try {
+            const emailAddress = Cookies.get("user_email");
+            if (!emailAddress) {
+                message.error('Please login first');
+                navigate('/');
+            }
+
+            setLoading(true);
+            const response = await fetch('http://localhost:8000/rides/driver/'+driverID, {
+                method: 'GET',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            console.log("Fetched rides:", data); // Debug log
+            setRides(data);
+
+        } catch (error) {
+            console.error("Error fetching rides:", error);
+            message.error('Failed to load rides');
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const drive = {
         start_location: "New York, NY",
@@ -45,6 +130,52 @@ function DrivesDash() {
     const toggleExpand = () => {
         setExpanded(!expanded);
     };
+
+    const openAddRideForm = () => {
+        Swal.fire({
+            title: 'Add New Ride',
+            html: `<div id="new-drive-form"></div>`, // Placeholder for form
+            showConfirmButton: false,
+            showCloseButton: true,
+            width: '600px',
+            didOpen: () => {
+                const container = document.getElementById('new-drive-form');
+                if (container) {
+                    import('../pages/NewDrive').then(({ default: NewDrivePage }) => {
+                        const formElement = document.createElement('div');
+                        formElement.innerHTML = `
+                            <form id="driveForm">
+                                <label>Start Location</label>
+                                <input type="text" id="startLocation" required>
+                                
+                                <label>End Location</label>
+                                <input type="text" id="endLocation" required>
+                                
+                                <label>Ride Time</label>
+                                <input type="time" id="rideTime" required>
+    
+                                <label>Available Seats</label>
+                                <input type="number" id="availableSeats" min="1" required>
+                                
+                                <label>Total Seats</label>
+                                <input type="number" id="totalSeats" min="1" required>
+                                
+                                <button type="submit" id="submitDrive">Submit</button>
+                            </form>
+                        `;
+                        container.appendChild(formElement);
+    
+                        document.getElementById('submitDrive').addEventListener('click', (e) => {
+                            e.preventDefault();
+                            Swal.close();
+                            console.log("Form Submitted!"); // Replace with actual logic
+                        });
+                    });
+                }
+            }
+        });
+    };
+    
 
     return (
         <div>
@@ -84,18 +215,22 @@ function DrivesDash() {
             </div>
 
             {/* SpeedDial to Add New Ride */}
-            <SpeedDial
+        <SpeedDial
                 ariaLabel="Add New Ride"
                 sx={{ position: "fixed", bottom: 16, right: 16 }}
                 icon={<SpeedDialIcon icon={<AddCircleOutlineIcon />} />}
-                onClick={() => Swal.fire("Feature Coming Soon!", "This will allow adding a new ride.", "info")}
             >
-                <SpeedDialAction
-                    icon={<AddCircleOutlineIcon />}
-                    tooltipTitle="Add New Ride"
-                    onClick={() => Swal.fire("Feature Coming Soon!", "This will allow adding a new ride.", "info")}
-                />
-            </SpeedDial>
+            <SpeedDialAction
+                icon={<AddCircleOutlineIcon />}
+                tooltipTitle="Add New Ride"
+                onClick={(e) => {
+                e.stopPropagation(); // Prevents double trigger
+                openAddRideForm();
+            }}
+            />
+        </SpeedDial>
+
+
         </div>
     );
 }
