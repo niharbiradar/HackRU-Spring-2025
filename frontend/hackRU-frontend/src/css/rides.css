@@ -1,123 +1,194 @@
+/* General Styles */
 .rides-page {
-    padding: 20px;
+    padding: 24px;
     min-height: 100vh;
-    background-color: #f0f2f5;
+    background: linear-gradient(135deg, #f0f2f5, #e6e9ef);
+    font-family: 'Inter', sans-serif;
 }
 
 .page-header {
     text-align: center;
-    margin-bottom: 30px;
+    margin-bottom: 32px;
 }
 
 .page-header h1 {
-    font-size: 28px;
+    font-size: 36px;
     color: #1a1f36;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
 }
 
 .page-header p {
     color: #4a5568;
     font-size: 16px;
+    font-weight: 400;
+}
+
+.rides-section {
+    margin-bottom: 40px;
+}
+
+.rides-section h4 {
+    color: #1a1f36;
+    margin-bottom: 20px;
+    font-size: 24px;
+    font-weight: 600;
+    position: relative;
+    display: inline-block;
+}
+
+.rides-section h4::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: -8px;
+    width: 50px;
+    height: 4px;
+    background: linear-gradient(90deg, #6a11cb, #2575fc);
+    border-radius: 2px;
 }
 
 .card-container {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     gap: 24px;
-    max-width: 1400px;
-    margin: 0 auto;
 }
 
+/* Ride Card Styles */
 .ride-card {
     background: white;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
     transition: all 0.3s ease;
+    overflow: hidden;
+    border: none;
 }
 
 .ride-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+    transform: translateY(-8px);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
 }
 
-.ride-card.scheduled {
-    border-left: 4px solid #52c41a;
+.ride-card.pending {
+    border-left: 6px solid #ff9f43;
 }
 
-.ride-card.in-progress {
-    border-left: 4px solid #1890ff;
+.ride-card.in_progress {
+    border-left: 6px solid #2e86de;
+}
+
+.ride-card.accepted {
+    border-left: 6px solid #10ac84;
+}
+
+.ride-card.available {
+    border-left: 6px solid #00d2d3;
 }
 
 .ride-card.completed {
-    border-left: 4px solid #8c8c8c;
+    border-left: 6px solid #8395a7;
 }
 
-.ride-card.canceled {
-    border-left: 4px solid #f5222d;
+.ride-card.rejected {
+    border-left: 6px solid #ee5253;
 }
 
 .driver-name-link {
-    color: #1890ff;
+    color: #2e86de;
     cursor: pointer;
     transition: color 0.3s;
+    font-weight: 500;
 }
 
 .driver-name-link:hover {
-    color: #40a9ff;
+    color: #54a0ff;
     text-decoration: underline;
 }
 
 .ride-details {
-    padding: 8px 0;
+    padding: 20px;
 }
 
 .ride-info p {
     margin-bottom: 12px;
     font-size: 14px;
-    line-height: 1.5;
+    line-height: 1.6;
+    color: #4a5568;
+}
+
+.ride-info strong {
+    color: #1a1f36;
+    font-weight: 600;
 }
 
 .status {
     text-transform: capitalize;
+    font-weight: 500;
 }
 
-.status-scheduled {
-    color: #52c41a;
+.status-pending {
+    color: #ff9f43;
 }
 
-.status-in-progress {
-    color: #1890ff;
+.status-in_progress {
+    color: #2e86de;
+}
+
+.status-accepted {
+    color: #10ac84;
+}
+
+.status-available {
+    color: #00d2d3;
 }
 
 .status-completed {
-    color: #8c8c8c;
+    color: #8395a7;
 }
 
-.status-canceled {
-    color: #f5222d;
+.status-rejected {
+    color: #ee5253;
 }
 
-/* Button styles based on status */
-.ant-btn.scheduled {
-    background-color: #52c41a;
-    border-color: #52c41a;
+/* Button Styles */
+.ant-btn {
+    font-weight: 500;
+    border-radius: 8px;
+    transition: all 0.3s ease;
 }
 
-.ant-btn.in-progress {
-    background-color: #1890ff;
-    border-color: #1890ff;
+.ant-btn.available {
+    background: linear-gradient(135deg, #00d2d3, #00b4d8);
+    border: none;
+    color: white;
+}
+
+.ant-btn.available:hover {
+    background: linear-gradient(135deg, #00b4d8, #0096c7);
+}
+
+.ant-btn.pending {
+    background: linear-gradient(135deg, #ff9f43, #ff7f50);
+    border: none;
+    color: white;
+}
+
+.ant-btn.pending:hover {
+    background: linear-gradient(135deg, #ff7f50, #ff6b6b);
 }
 
 .ant-btn.completed {
-    background-color: #8c8c8c;
-    border-color: #8c8c8c;
+    background: linear-gradient(135deg, #8395a7, #6c7a89);
+    border: none;
+    color: white;
 }
 
-.ant-btn.canceled {
-    background-color: #f5222d;
-    border-color: #f5222d;
+.ant-btn.completed:hover {
+    background: linear-gradient(135deg, #6c7a89, #576574);
 }
 
+/* Loading and Empty States */
 .loading-container {
     display: flex;
     flex-direction: column;
@@ -134,33 +205,73 @@
     height: 60vh;
 }
 
+.empty-container .ant-empty-description {
+    color: #4a5568;
+    font-size: 16px;
+}
+
+/* Driver Details Modal */
 .driver-details {
-    padding: 16px;
+    padding: 20px;
+    text-align: center;
+}
+
+.driver-details img {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    margin-bottom: 16px;
+    border: 4px solid #fff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .driver-info {
     background: #f8f9fa;
-    padding: 12px;
-    border-radius: 8px;
-    margin-top: 12px;
+    padding: 16px;
+    border-radius: 12px;
+    margin-top: 16px;
 }
 
 .driver-info p {
     margin: 8px 0;
+    color: #4a5568;
 }
 
-/* Responsive design */
+.driver-info strong {
+    color: #1a1f36;
+}
+
+/* Responsive Design */
 @media (max-width: 768px) {
     .card-container {
         grid-template-columns: 1fr;
-        padding: 0 10px;
     }
 
     .page-header h1 {
-        font-size: 24px;
+        font-size: 28px;
+    }
+
+    .rides-section h4 {
+        font-size: 20px;
     }
 
     .ride-card {
         margin-bottom: 16px;
     }
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.ride-card {
+    animation: fadeIn 0.5s ease-out;
 }

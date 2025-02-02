@@ -28,6 +28,56 @@ ride_model = rides_ns.model('Ride', {
     'created_at': fields.DateTime(description="Ride creation timestamp"),
 })
 
+
+@rides_ns.route('/all')
+class AllRidesAndBookings(Resource):
+    def get(self):
+        """Fetch all rides and bookings"""
+        try:
+            # Fetch all rides
+            rides_cursor = db.rides.find()
+            rides_list = list(rides_cursor)
+            
+            # Fetch all bookings
+            bookings_cursor = db.bookings.find()
+            bookings_list = list(bookings_cursor)
+            
+            # Process rides to make them JSON serializable
+            processed_rides = []
+            for ride in rides_list:
+                ride_dict = {}
+                for key, value in ride.items():
+                    if isinstance(value, ObjectId):
+                        ride_dict[key] = str(value)
+                    elif isinstance(value, datetime):
+                        ride_dict[key] = value.isoformat()
+                    else:
+                        ride_dict[key] = value
+                processed_rides.append(ride_dict)
+            
+            # Process bookings similarly
+            processed_bookings = []
+            for booking in bookings_list:
+                booking_dict = {}
+                for key, value in booking.items():
+                    if isinstance(value, ObjectId):
+                        booking_dict[key] = str(value)
+                    elif isinstance(value, datetime):
+                        booking_dict[key] = value.isoformat()
+                    else:
+                        booking_dict[key] = value
+                processed_bookings.append(booking_dict)
+            
+            # Combine and return
+            return {
+                'rides': processed_rides,
+                'bookings': processed_bookings
+            }
+
+        except Exception as e:
+            print(f"Error in /rides/all GET: {str(e)}")
+            return {'error': str(e)}, 500
+
 @rides_ns.route('/driver/<string:driver_id>')
 class DriverRides(Resource):
     def get(self, driver_id):
@@ -84,20 +134,21 @@ class TestDB(Resource):
             error_response.headers.add("Access-Control-Allow-Credentials", "true")
             return error_response
 
+
+
+
 @rides_ns.route('/')
 class RideList(Resource):
     def get(self):
-        """Fetch all active rides (excluding completed ones)"""
+        """Fetch all rides"""
         try:
-            print("Fetching active rides from database...")
+            print("Fetching all rides from database...")
             
-            # Query rides that are not completed
-            rides_cursor = db.rides.find({
-                'status': {'$ne': 'completed'}  # Exclude completed rides
-            })
+            # Remove status filter to return ALL rides
+            rides_cursor = db.rides.find()
             
             rides_list = list(rides_cursor)
-            print(f"Found {len(rides_list)} active rides")
+            print(f"Found {len(rides_list)} total rides")
             
             # Process rides to make them JSON serializable
             processed_rides = []
@@ -112,7 +163,7 @@ class RideList(Resource):
                         ride_dict[key] = value
                 processed_rides.append(ride_dict)
 
-            print(f"Processed {len(processed_rides)} rides")
+            print("Rides found:", [ride.get('status') for ride in processed_rides])
 
             response = make_response(jsonify(processed_rides))
             response.headers.add("Access-Control-Allow-Origin", "http://localhost:5173")
