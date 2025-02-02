@@ -41,8 +41,28 @@ export default function Login() {
         .then((response) => response.json())
         .then((data) => {
           if (data.email && data.email.endsWith(".edu")) {
-            const emailAddress = data.email
-            setIsLoggedin(true);
+            const emailAddress = data.email;
+            // check if email address exists
+            alert(emailAddress)
+            fetch(`http://localhost:8000/users/check_email?email=${encodeURIComponent(emailAddress)}`, {
+              method: 'GET',
+              credentials: 'include'  // Important!
+            })
+
+              .then((res) => res.json())
+              .then((resData) => {
+                alert("resData: " + JSON.stringify(resData))
+                if (resData.exists) {
+                  setIsLoggedin(true);
+                  navigate("/landing");
+                } else {
+                  // if email address is valid but not found, send to onboarding. 
+                  navigate("/onboarding")
+                }
+              })
+              .catch((err) => {
+                console.error('Error checking email:', err);
+              });
           } else {
             showAlert();
             Cookies.remove("access_token"); // Remove invalid session
@@ -64,7 +84,7 @@ export default function Login() {
   return (
     <div className="root">
       <div>
-        <h1>Continue With Google</h1>
+        <h1>Log in with Google</h1>
         <div className="btn-container">
           <button className="btn btn-primary" onClick={handleClick}>
             <svg
