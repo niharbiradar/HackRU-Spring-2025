@@ -1,4 +1,4 @@
-from flask import request
+from flask import request, make_response, jsonify
 from flask_restx import Namespace, Resource, fields
 from bson import ObjectId
 from datetime import datetime
@@ -28,23 +28,95 @@ ride_model = rides_ns.model('Ride', {
     'created_at': fields.DateTime(description="Ride creation timestamp"),
 })
 
+@rides_ns.route('/test-db')
+class TestDB(Resource):
+    def get(self):
+        """Test database connection"""
+        try:
+            # Test MongoDB connection
+            count = db.rides.count_documents({})
+            
+            response = make_response(jsonify({
+                'status': 'success',
+                'message': 'Database connection successful',
+                'rides_count': count
+            }))
+            response.headers.add("Access-Control-Allow-Origin", "http://localhost:5173")
+            response.headers.add("Access-Control-Allow-Credentials", "true")
+            return response
+            
+        except Exception as e:
+            error_response = make_response(jsonify({
+                'status': 'error',
+                'message': str(e)
+            }), 500)
+            error_response.headers.add("Access-Control-Allow-Origin", "http://localhost:5173")
+            error_response.headers.add("Access-Control-Allow-Credentials", "true")
+            return error_response
+
 @rides_ns.route('/')
 class RideList(Resource):
-    @rides_ns.marshal_list_with(ride_model)
     def get(self):
-        """Fetch all available rides"""
-        rides = db.rides.find({'status': 'scheduled'})
-        return [{'_id': str(ride['_id']), **ride} for ride in rides]
+        """Fetch all active rides (excluding completed ones)"""
+        try:
+            print("Fetching active rides from database...")
+            
+            # Query rides that are not completed
+            rides_cursor = db.rides.find({
+                'status': {'$ne': 'completed'}  # Exclude completed rides
+            })
+            
+            rides_list = list(rides_cursor)
+            print(f"Found {len(rides_list)} active rides")
+            
+            # Process rides to make them JSON serializable
+            processed_rides = []
+            for ride in rides_list:
+                ride_dict = {}
+                for key, value in ride.items():
+                    if isinstance(value, ObjectId):
+                        ride_dict[key] = str(value)
+                    elif isinstance(value, datetime):
+                        ride_dict[key] = value.isoformat()
+                    else:
+                        ride_dict[key] = value
+                processed_rides.append(ride_dict)
 
-    @rides_ns.expect(ride_model)
-    @rides_ns.marshal_with(ride_model, code=201)
+            print(f"Processed {len(processed_rides)} rides")
+
+            response = make_response(jsonify(processed_rides))
+            response.headers.add("Access-Control-Allow-Origin", "http://localhost:5173")
+            response.headers.add("Access-Control-Allow-Credentials", "true")
+            return response
+
+        except Exception as e:
+            print(f"Error in /rides GET: {str(e)}")
+            error_response = make_response(jsonify({'error': str(e)}), 500)
+            error_response.headers.add("Access-Control-Allow-Origin", "http://localhost:5173")
+            error_response.headers.add("Access-Control-Allow-Credentials", "true")
+            return error_response
+
+
+    @rides_ns.expect(ride_model)  # Assuming you have ride_model defined
     def post(self):
         """Create a new ride"""
-        data = request.get_json()
-        data['created_at'] = datetime.utcnow()
-        result = db.rides.insert_one(data)
-        data['_id'] = str(result.inserted_id)
-        return data, 201
+        try:
+            data = request.get_json()
+            data['created_at'] = datetime.utcnow()
+            
+            result = db.rides.insert_one(data)
+            data['_id'] = str(result.inserted_id)
+            
+            response = make_response(jsonify(data), 201)
+            response.headers.add("Access-Control-Allow-Origin", "http://localhost:5173")
+            response.headers.add("Access-Control-Allow-Credentials", "true")
+            return response
+            
+        except Exception as e:
+            error_response = make_response(jsonify({'error': str(e)}), 500)
+            error_response.headers.add("Access-Control-Allow-Origin", "http://localhost:5173")
+            error_response.headers.add("Access-Control-Allow-Credentials", "true")
+            return error_response
 
 @rides_ns.route('/<string:ride_id>')
 @rides_ns.param('ride_id', 'Ride ID')
