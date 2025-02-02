@@ -1,9 +1,32 @@
 import React, { useState } from 'react';
-import '../css/drive.css'; // Ensure your CSS file is updated for better width
+import '../css/drive.css';
 import { useNavigate } from "react-router-dom";
 
 const NewDrivePage = () => {
    const navigate = useNavigate();
+
+   // List of available locations (Modify this list as needed)
+   const locations = [
+       "College Ave Gym - College Ave",
+       "The Yard - College Ave",
+       "Academic Building - College Ave",
+       "Verve - College Ave",
+       "Hardenbergh Hall- College Ave",
+       "Student Center - Livingston Campus ",
+       "Business Building - Livingston Campus",
+       "Tillet Hall - Livingston Campus",
+       "Quads - Livingston Campus",
+
+       "Allison Road Classrooms - Busch Campus",
+       "Student Center - Busch Campus",
+       "Hill Center - Busch Campus",
+       "Engineering Building - Busch Campus",
+       "Stadium - Busch Campus",
+       "Hickman Hall - Cook Campus ",
+       "Student Center - Cook Campus",
+       "Newell Appartments - Cook Campus",
+   ];
+
    const [formData, setFormData] = useState({
        startLocation: '',
        endLocation: '',
@@ -27,33 +50,44 @@ const NewDrivePage = () => {
    };
 
    return (
-       <div className="drive-container"> {/* Updated class for better styling */}
-           <h2>Start a Drive</h2>
+       <div className="drive-container">
+           <h2>Submit a Drive</h2>
            <form onSubmit={handleSubmit}>
+               {/* Start Location Dropdown */}
                <div className="form-item">
                    <label htmlFor="startLocation">Start Location</label>
-                   <input
-                       type="text"
+                   <select
                        id="startLocation"
                        name="startLocation"
                        value={formData.startLocation}
                        onChange={handleChange}
                        required
-                   />
+                   >
+                       <option value="">Select a location</option>
+                       {locations.map((location, index) => (
+                           <option key={index} value={location}>{location}</option>
+                       ))}
+                   </select>
                </div>
 
+               {/* End Location Dropdown */}
                <div className="form-item">
                    <label htmlFor="endLocation">End Location</label>
-                   <input
-                       type="text"
+                   <select
                        id="endLocation"
                        name="endLocation"
                        value={formData.endLocation}
                        onChange={handleChange}
                        required
-                   />
+                   >
+                       <option value="">Select a location</option>
+                       {locations.map((location, index) => (
+                           <option key={index} value={location}>{location}</option>
+                       ))}
+                   </select>
                </div>
 
+               {/* Ride Time */}
                <div className="form-item">
                    <label htmlFor="rideTime">Ride Time</label>
                    <input
@@ -66,6 +100,7 @@ const NewDrivePage = () => {
                    />
                </div>
 
+               {/* Available Seats */}
                <div className="form-item">
                    <label htmlFor="availableSeats">Available Seats</label>
                    <input
@@ -79,6 +114,7 @@ const NewDrivePage = () => {
                    />
                </div>
 
+               {/* Total Seats */}
                <div className="form-item">
                    <label htmlFor="totalSeats">Total Seats</label>
                    <input
