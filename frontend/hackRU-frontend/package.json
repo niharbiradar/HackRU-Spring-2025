@@ -21,6 +21,7 @@
     "react-bootstrap": "^2.10.9",
     "react-dom": "^18.2.0",
     "react-router-dom": "^7.1.5",
+    "react-sweetalert2": "^0.6.0",
     "sweetalert2": "^11.15.10"
   },
   "devDependencies": {

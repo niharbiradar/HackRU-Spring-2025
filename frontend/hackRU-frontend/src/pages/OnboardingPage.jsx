@@ -89,6 +89,8 @@ const OnboardingPage = () => {
     
                 if (formData.profilePicture) {
                     formDataToSend.append('profilePicture', formData.profilePicture);
+                } else {
+                    formDataToSend.append('profilePicture', null);
                 }
     
                 if (isDriver) {
@@ -109,7 +111,7 @@ const OnboardingPage = () => {
     
                 const data = await response.json();
                 console.log("Onboarding successful:", data);
-                navigate('/landing');
+                navigate('/rides');
     
             } catch (err) {
                 console.error("Error submitting onboarding form:", err);
@@ -127,7 +129,7 @@ const OnboardingPage = () => {
                         const checkData = await checkResponse.json();
                         if (checkData.exists) {
                             console.log("User exists, redirecting to landing...");
-                            navigate('/landing');
+                            navigate('/rides');
                             return;
                         }
                     }

@@ -130,19 +130,50 @@ class UserList(Resource):
     def options(self):
         """Handle CORS preflight"""
         response = make_response()
-        return handle_cors_response(response)
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:5173")
+        response.headers.add("Access-Control-Allow-Credentials", "true")
+        response.headers.add("Access-Control-Allow-Headers", "Content-Type, Authorization")
+        response.headers.add("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        return response
 
-    @users_ns.marshal_list_with(user_model)
     def get(self):
-        """Get all users"""
+        """Fetch all users"""
         try:
-            users = list(db.users.find())
-            for user in users:
-                user['_id'] = str(user['_id'])
-            return handle_cors_response(jsonify(users))
-        except Exception as e:
-            return handle_cors_response(jsonify({'error': str(e)})), 500
+            print("Fetching users from database...")
+            
+            # Query all users
+            users_cursor = db.users.find()
+            users_list = list(users_cursor)
+            print(f"Found {len(users_list)} users")
+            
+            # Process users to make them JSON serializable
+            processed_users = []
+            for user in users_list:
+                user_dict = {}
+                for key, value in user.items():
+                    if isinstance(value, ObjectId):
+                        user_dict[key] = str(value)
+                    elif isinstance(value, datetime):
+                        user_dict[key] = value.isoformat()
+                    else:
+                        user_dict[key] = value
+                processed_users.append(user_dict)
 
+            print(f"Processed {len(processed_users)} users")
+
+            # Create response with CORS headers
+            response = make_response(jsonify(processed_users))
+            response.headers.add("Access-Control-Allow-Origin", "http://localhost:5173")
+            response.headers.add("Access-Control-Allow-Credentials", "true")
+            return response
+
+        except Exception as e:
+            print(f"Error in /users GET: {str(e)}")
+            error_response = make_response(jsonify({'error': str(e)}), 500)
+            error_response.headers.add("Access-Control-Allow-Origin", "http://localhost:5173")
+            error_response.headers.add("Access-Control-Allow-Credentials", "true")
+            return error_response
+        
     @users_ns.expect(user_model)
     def post(self):
         """Create new user"""
@@ -235,3 +266,56 @@ class EmailVerification(Resource):
             return handle_cors_response(jsonify({'message': 'Email verified successfully'}))
         except Exception as e:
             return handle_cors_response(jsonify({'error': str(e)})), 500
+
+@users_ns.route('/get_user_id')
+class GetUserID(Resource):
+    def options(self):
+        """Handle CORS preflight"""
+        response = make_response()
+        response.status_code = 200
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:5173")
+        response.headers.add("Access-Control-Allow-Credentials", "true")
+        response.headers.add("Access-Control-Allow-Headers", "Content-Type, Authorization")
+        response.headers.add("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+        return response
+
+    def get(self):
+        """Get user_id by email"""
+        try:
+            email = request.args.get('email')
+            if not email:
+                return jsonify({'error': 'Email is required'}), 400
+
+            user = db.users.find_one({'email': email}, {'user_id': 1})
+            if not user:
+                return jsonify({'error': 'User not found'}), 404
+
+            # Ensure the response is serializable
+            user_id = str(user.get('user_id'))  # Ensure the 'user_id' is a string
+
+            response = jsonify({'user_id': user_id})
+            response.headers.add("Access-Control-Allow-Origin", "http://localhost:5173")
+            response.headers.add("Access-Control-Allow-Credentials", "true")
+            return response
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+
+@users_ns.route('/get_user_details')
+class GetUserDetails(Resource):
+    def get(self):
+        """Get user details (name, profile_picture, vehicle) by email"""
+        try:
+            email = request.args.get('email')
+            if not email:
+                return make_response(jsonify({'error': 'Email parameter is required'}), 400)
+
+            # Query MongoDB for the user
+            user = db.users.find_one({"email": email}, {"_id": 0, "name": 1, "profile_picture": 1, "vehicle_info": 1})
+
+            if not user:
+                return make_response(jsonify({'error': 'User not found'}), 404)
+
+            return make_response(jsonify(user), 200)
+
+        except Exception as e:
+            return make_response(jsonify({'error': str(e)}), 500)

@@ -1,4 +1,4 @@
-from flask import request
+from flask import request, jsonify, make_response, send_from_directory
 from flask_restx import Namespace, Resource, fields
 from bson import ObjectId
 from datetime import datetime
@@ -51,38 +51,72 @@ class BookingList(Resource):
         
         return data, 201
 
-@bookings_ns.route('/<string:booking_id>')
-@bookings_ns.param('booking_id', 'Booking ID')
-class BookingResource(Resource):
-    @bookings_ns.marshal_with(booking_model)
-    def get(self, booking_id):
-        """Fetch booking details"""
-        booking = db.bookings.find_one({'booking_id': booking_id})
-        if booking:
-            return {'_id': str(booking['_id']), **booking}
-        bookings_ns.abort(404, "Booking not found")
+# @bookings_ns.route('/<string:booking_id>')
+# @bookings_ns.param('booking_id', 'Booking ID')
+# class BookingResource(Resource):
+#     @bookings_ns.marshal_with(booking_model)
+#     def get(self, booking_id):
+#         """Fetch booking details"""
+#         booking = db.bookings.find_one({'booking_id': booking_id})
+#         if booking:
+#             return {'_id': str(booking['_id']), **booking}
+#         bookings_ns.abort(404, "Booking not found")
 
-    @bookings_ns.expect(booking_model)
-    @bookings_ns.marshal_with(booking_model)
-    def put(self, booking_id):
-        """Update booking details"""
-        data = request.get_json()
-        data['updated_at'] = datetime.utcnow()
-        result = db.bookings.update_one({'booking_id': booking_id}, {'$set': data})
-        if result.matched_count == 0:
-            bookings_ns.abort(404, "Booking not found")
-        return db.bookings.find_one({'booking_id': booking_id})
+#     @bookings_ns.expect(booking_model)
+#     @bookings_ns.marshal_with(booking_model)
+#     def put(self, booking_id):
+#         """Update booking details"""
+#         data = request.get_json()
+#         data['updated_at'] = datetime.utcnow()
+#         result = db.bookings.update_one({'booking_id': booking_id}, {'$set': data})
+#         if result.matched_count == 0:
+#             bookings_ns.abort(404, "Booking not found")
+#         return db.bookings.find_one({'booking_id': booking_id})
 
-    def delete(self, booking_id):
-        """Cancel a booking"""
-        booking = db.bookings.find_one({'booking_id': booking_id})
-        if not booking:
-            bookings_ns.abort(404, "Booking not found")
+#     def delete(self, booking_id):
+#         """Cancel a booking"""
+#         booking = db.bookings.find_one({'booking_id': booking_id})
+#         if not booking:
+#             bookings_ns.abort(404, "Booking not found")
         
-        db.rides.update_one(
-            {'ride_id': booking['ride_id']},
-            {'$inc': {'available_seats': booking['seats_booked']}}
-        )
+#         db.rides.update_one(
+#             {'ride_id': booking['ride_id']},
+#             {'$inc': {'available_seats': booking['seats_booked']}}
+#         )
         
-        db.bookings.delete_one({'booking_id': booking_id})
-        return {'message': 'Booking canceled'}, 200
+#         db.bookings.delete_one({'booking_id': booking_id})
+#         return {'message': 'Booking canceled'}, 200
+
+
+@bookings_ns.route('/get_by_ride_id')
+class GetBookingsByRideId(Resource):
+    def get(self):
+        """Get all bookings by ride_id"""
+        try:
+            ride_id = request.args.get('ride_id')
+            if not ride_id:
+                return make_response(jsonify({'error': 'Ride ID parameter is required'}), 400)
+
+            # Log received ride_id
+            print(f"Received ride_id: {ride_id}")
+
+            # Query MongoDB for all bookings related to the ride_id
+            bookings_cursor = db.bookings.find({'ride_id': ride_id})
+            print(f"Found {bookings_cursor} bookings")
+            bookings_list = list(bookings_cursor)
+            print(f"Retrieved {bookings_list} bookings")
+
+            if not bookings_list:
+                return make_response(jsonify({'message': 'No bookings found for this ride'}), 404)
+
+            # Convert ObjectId fields to string
+            processed_bookings = []
+            for booking in bookings_list:
+                booking_dict = {key: str(value) if isinstance(value, ObjectId) else value for key, value in booking.items()}
+                processed_bookings.append(booking_dict)
+
+            return make_response(jsonify(processed_bookings), 200)
+
+        except Exception as e:
+            print(f"Error: {str(e)}")  # Log error
+            return make_response(jsonify({'error': str(e)}), 500)
