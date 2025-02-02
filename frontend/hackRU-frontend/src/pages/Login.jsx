@@ -43,9 +43,15 @@ export default function Login() {
           if (data.email && data.email.endsWith(".edu")) {
             const emailAddress = data.email;
             // check if email address exists
-            fetch(`http://localhost:8000/api/users/check_email?email=${encodeURIComponent(emailAddress)}`)
+            alert(emailAddress)
+            fetch(`http://localhost:8000/users/check_email?email=${encodeURIComponent(emailAddress)}`, {
+              method: 'GET',
+              credentials: 'include'  // Important!
+            })
+
               .then((res) => res.json())
               .then((resData) => {
+                alert("resData: " + JSON.stringify(resData))
                 if (resData.exists) {
                   setIsLoggedin(true);
                   navigate("/landing");
