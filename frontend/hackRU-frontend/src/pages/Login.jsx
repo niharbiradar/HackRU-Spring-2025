@@ -64,7 +64,7 @@ export default function Login() {
 
   useEffect(() => {
     if (isLoggedin) {
-      navigate("/landing");
+      navigate("/rides");
     }
   }, [isLoggedin, navigate]);
 

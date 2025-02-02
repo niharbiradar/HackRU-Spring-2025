@@ -8,11 +8,80 @@ import SpeedDial from '@mui/material/SpeedDial';
 import SpeedDialIcon from '@mui/material/SpeedDialIcon';
 import SpeedDialAction from '@mui/material/SpeedDialAction';
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
+import { useNavigate } from 'react-router-dom';
+import Cookies from 'js-cookie';
 
  
 
 function DrivesDash() {
+    const [driverID, setDriverID] = useState([]);
+    const [loading, setLoading] = useState(true);
 
+    const fetchDriverID = async () => {
+        try {
+            const emailAddress = Cookies.get("user_email");
+            if (!emailAddress) {
+                message.error('Please login first');
+                navigate('/');
+            }
+
+            setLoading(true);
+            const response = await fetch('http://localhost:8000/drivers/', {
+                method: 'GET',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            console.log("Fetched rides:", data); // Debug log
+            setDriverID(data);
+
+        } catch (error) {
+            console.error("Error fetching rides:", error);
+            message.error('Failed to load rides');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const fetchRidesbyDriver = async () => {
+        try {
+            const emailAddress = Cookies.get("user_email");
+            if (!emailAddress) {
+                message.error('Please login first');
+                navigate('/');
+            }
+
+            setLoading(true);
+            const response = await fetch('http://localhost:8000/rides/driver/<string:driver_id>', {
+                method: 'GET',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            console.log("Fetched rides:", data); // Debug log
+            setRides(data);
+
+        } catch (error) {
+            console.error("Error fetching rides:", error);
+            message.error('Failed to load rides');
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const drive = {
         start_location: "New York, NY",
