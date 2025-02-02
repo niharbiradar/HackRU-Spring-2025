@@ -10,6 +10,7 @@ import SpeedDialAction from '@mui/material/SpeedDialAction';
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
 import { useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
+import NewDrivePage from '../pages/NewDrive';
 
  
 
@@ -130,6 +131,52 @@ function DrivesDash() {
         setExpanded(!expanded);
     };
 
+    const openAddRideForm = () => {
+        Swal.fire({
+            title: 'Add New Ride',
+            html: `<div id="new-drive-form"></div>`, // Placeholder for form
+            showConfirmButton: false,
+            showCloseButton: true,
+            width: '600px',
+            didOpen: () => {
+                const container = document.getElementById('new-drive-form');
+                if (container) {
+                    import('../pages/NewDrive').then(({ default: NewDrivePage }) => {
+                        const formElement = document.createElement('div');
+                        formElement.innerHTML = `
+                            <form id="driveForm">
+                                <label>Start Location</label>
+                                <input type="text" id="startLocation" required>
+                                
+                                <label>End Location</label>
+                                <input type="text" id="endLocation" required>
+                                
+                                <label>Ride Time</label>
+                                <input type="time" id="rideTime" required>
+    
+                                <label>Available Seats</label>
+                                <input type="number" id="availableSeats" min="1" required>
+                                
+                                <label>Total Seats</label>
+                                <input type="number" id="totalSeats" min="1" required>
+                                
+                                <button type="submit" id="submitDrive">Submit</button>
+                            </form>
+                        `;
+                        container.appendChild(formElement);
+    
+                        document.getElementById('submitDrive').addEventListener('click', (e) => {
+                            e.preventDefault();
+                            Swal.close();
+                            console.log("Form Submitted!"); // Replace with actual logic
+                        });
+                    });
+                }
+            }
+        });
+    };
+    
+
     return (
         <div>
             {/* Main Card for Viewing Requests */}
@@ -168,18 +215,22 @@ function DrivesDash() {
             </div>
 
             {/* SpeedDial to Add New Ride */}
-            <SpeedDial
+        <SpeedDial
                 ariaLabel="Add New Ride"
                 sx={{ position: "fixed", bottom: 16, right: 16 }}
                 icon={<SpeedDialIcon icon={<AddCircleOutlineIcon />} />}
-                onClick={() => Swal.fire("Feature Coming Soon!", "This will allow adding a new ride.", "info")}
             >
-                <SpeedDialAction
-                    icon={<AddCircleOutlineIcon />}
-                    tooltipTitle="Add New Ride"
-                    onClick={() => Swal.fire("Feature Coming Soon!", "This will allow adding a new ride.", "info")}
-                />
-            </SpeedDial>
+            <SpeedDialAction
+                icon={<AddCircleOutlineIcon />}
+                tooltipTitle="Add New Ride"
+                onClick={(e) => {
+                e.stopPropagation(); // Prevents double trigger
+                openAddRideForm();
+            }}
+            />
+        </SpeedDial>
+
+
         </div>
     );
 }
