@@ -28,85 +28,49 @@ ride_model = rides_ns.model('Ride', {
     'created_at': fields.DateTime(description="Ride creation timestamp"),
 })
 
-
-@rides_ns.route('/all')
-class AllRidesAndBookings(Resource):
-    def get(self):
-        """Fetch all rides and bookings"""
-        try:
-            # Fetch all rides
-            rides_cursor = db.rides.find()
-            rides_list = list(rides_cursor)
-            
-            # Fetch all bookings
-            bookings_cursor = db.bookings.find()
-            bookings_list = list(bookings_cursor)
-            
-            # Process rides to make them JSON serializable
-            processed_rides = []
-            for ride in rides_list:
-                ride_dict = {}
-                for key, value in ride.items():
-                    if isinstance(value, ObjectId):
-                        ride_dict[key] = str(value)
-                    elif isinstance(value, datetime):
-                        ride_dict[key] = value.isoformat()
-                    else:
-                        ride_dict[key] = value
-                processed_rides.append(ride_dict)
-            
-            # Process bookings similarly
-            processed_bookings = []
-            for booking in bookings_list:
-                booking_dict = {}
-                for key, value in booking.items():
-                    if isinstance(value, ObjectId):
-                        booking_dict[key] = str(value)
-                    elif isinstance(value, datetime):
-                        booking_dict[key] = value.isoformat()
-                    else:
-                        booking_dict[key] = value
-                processed_bookings.append(booking_dict)
-            
-            # Combine and return
-            return {
-                'rides': processed_rides,
-                'bookings': processed_bookings
-            }
-
-        except Exception as e:
-            print(f"Error in /rides/all GET: {str(e)}")
-            return {'error': str(e)}, 500
-
-@rides_ns.route('/driver/<string:driver_id>')
+@rides_ns.route('/driver/')
 class DriverRides(Resource):
-    def get(self, driver_id):
+    def options(self):
+        """Handle CORS preflight"""
+        response = make_response()
+        response.status_code = 200
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:5173")
+        response.headers.add("Access-Control-Allow-Credentials", "true")
+        response.headers.add("Access-Control-Allow-Headers", "Content-Type, Authorization")
+        response.headers.add("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+        return response
+
+    def get(self):
         """Fetch rides for a specific driver"""
         try:
+            driver_id = request.args.get('driverID')
             # Find all rides for this driver
-            rides = db.rides.find({'driver_id': driver_id})
-            
-            # Convert to list and process for JSON
+            rides_cursor = db.rides.find({'driver_id': driver_id})
+
+            # Convert the cursor to a list and process for JSON serializability
             rides_list = []
-            for ride in rides:
+            for ride in rides_cursor:
                 ride['_id'] = str(ride['_id'])
-                # Convert datetime objects to strings
+                # Convert datetime objects to ISO format strings
                 if 'ride_time' in ride:
                     ride['ride_time'] = ride['ride_time'].isoformat()
                 if 'created_at' in ride:
                     ride['created_at'] = ride['created_at'].isoformat()
+
                 rides_list.append(ride)
 
-            response = make_response(jsonify(rides_list))
+            # Ensure the response is serializable and contains CORS headers
+            response = jsonify(rides_list)
             response.headers.add("Access-Control-Allow-Origin", "http://localhost:5173")
             response.headers.add("Access-Control-Allow-Credentials", "true")
             return response
 
         except Exception as e:
-            error_response = make_response(jsonify({'error': str(e)}), 500)
+            # Error handling with CORS headers
+            error_response = jsonify({'error': str(e)})
             error_response.headers.add("Access-Control-Allow-Origin", "http://localhost:5173")
             error_response.headers.add("Access-Control-Allow-Credentials", "true")
-            return error_response
+            return error_response, 500
 
 @rides_ns.route('/test-db')
 class TestDB(Resource):
