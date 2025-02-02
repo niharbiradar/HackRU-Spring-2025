@@ -1,0 +1,58 @@
+.requests-container {
+    background: #ffffff;
+    border-radius: 10px;
+    padding: 15px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    max-width: 400px;
+    margin: 10px auto;
+}
+
+.requests-title {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 10px;
+    color: #333;
+}
+
+.requests-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.request-item {
+    background: #f9f9f9;
+    padding: 10px;
+    margin-bottom: 8px;
+    border-radius: 6px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-left: 5px solid #007bff;
+}
+
+.request-item strong {
+    color: #444;
+}
+
+.request-status {
+    font-size: 14px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-weight: bold;
+}
+
+.status-pending {
+    background: #ffcc00;
+    color: #663d00;
+}
+
+.status-accepted {
+    background: #28a745;
+    color: #fff;
+}
+
+.status-rejected {
+    background: #dc3545;
+    color: #fff;
+}

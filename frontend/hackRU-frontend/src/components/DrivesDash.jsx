@@ -11,6 +11,9 @@ import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
 import { useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
 import NewDrivePage from '../pages/NewDrive';
+import RequestsDriver from './RequestsDriver';
+
+
 
 function timeToISOString(time) {
     // Get today's date
@@ -344,15 +347,7 @@ const fetchDriverInfo = async (email) => {
             {expanded && (
                 <Collapse activeKey={expanded ? "1" : null} style={{ marginTop: '10px' }}>
                     <Panel header="Ride Requests" key="1">
-                        <List
-                            bordered
-                            dataSource={ride.requests}
-                            renderItem={request => (
-                                <List.Item>
-                                    <strong>{request.name}</strong> - {request.status}
-                                </List.Item>
-                            )}
-                        />
+                        <RequestsDriver rideId={ride._id} />
                     </Panel>
                 </Collapse>
             )}

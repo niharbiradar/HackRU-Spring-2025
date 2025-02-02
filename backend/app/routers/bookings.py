@@ -1,4 +1,4 @@
-from flask import request
+from flask import request, jsonify, make_response, send_from_directory
 from flask_restx import Namespace, Resource, fields
 from bson import ObjectId
 from datetime import datetime
@@ -86,3 +86,37 @@ class BookingResource(Resource):
         
         db.bookings.delete_one({'booking_id': booking_id})
         return {'message': 'Booking canceled'}, 200
+
+
+@bookings_ns.route('/get_by_ride_id')
+class GetBookingsByRideId(Resource):
+    def get(self):
+        """Get all bookings by ride_id"""
+        try:
+            ride_id = request.args.get('ride_id')
+            if not ride_id:
+                return make_response(jsonify({'error': 'Ride ID parameter is required'}), 400)
+
+            # Convert ride_id to ObjectId if needed
+            try:
+                ride_id = ObjectId(ride_id)
+            except Exception:
+                return make_response(jsonify({'error': 'Invalid Ride ID format'}), 400)
+
+            # Query MongoDB for all bookings related to the ride_id
+            bookings_cursor = db.bookings.find({"ride_id": ride_id})
+            bookings_list = list(bookings_cursor)
+
+            if not bookings_list:
+                return make_response(jsonify({'message': 'No bookings found for this ride'}), 404)
+
+            # Convert ObjectId fields to string
+            processed_bookings = []
+            for booking in bookings_list:
+                booking_dict = {key: str(value) if isinstance(value, ObjectId) else value for key, value in booking.items()}
+                processed_bookings.append(booking_dict)
+
+            return make_response(jsonify(processed_bookings), 200)
+
+        except Exception as e:
+            return make_response(jsonify({'error': str(e)}), 500)
