@@ -15,7 +15,7 @@ body {
 }
 
 /* Main container */
-.rides-container {
+.mydrives-container {
     width: 100%;
     max-width: 800px; /* Makes the card wider */
     margin: 30px auto;
