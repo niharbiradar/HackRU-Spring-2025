@@ -1,272 +1,289 @@
-import React, { useState, useEffect } from 'react';
-import { Card, Button, Spin, Empty, message, Space, Typography } from 'antd';
-import { useNavigate } from 'react-router-dom';
-import Cookies from 'js-cookie';
-import Swal from 'sweetalert2';
-import '../css/rides.css';
+import React, { useState, useEffect, useMemo } from 'react';
+import { 
+  Card, Typography, Button, Spin, Alert, Tag, Modal, Row, Col, message 
+} from 'antd';
+import { 
+  ClockCircleOutlined, CarOutlined, CheckCircleOutlined, 
+  EnvironmentOutlined, InfoCircleOutlined 
+} from '@ant-design/icons';
 
 const { Title, Text } = Typography;
 
-const Rides = () => {
-  const navigate = useNavigate();
-  const [ridesData, setRidesData] = useState({
-    rides: [],
-    bookings: []
-  });
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    // Check if user is logged in
-    const userEmail = Cookies.get('user_email');
-    if (!userEmail) {
-      message.error('Please login first');
-      navigate('/');
-      return;
-    }
-    fetchRidesAndBookings();
-  }, [navigate]);
-
-  const fetchRidesAndBookings = async () => {
+const RideCard = ({ ride, type, onRequestRide, onShowDriverDetails }) => {
+  const [isRequesting, setIsRequesting] = useState(false);
+  
+  const handleRequestRide = async () => {
+    setIsRequesting(true);
     try {
-      setLoading(true);
-      // Fetch rides from rides endpoint
-      const ridesResponse = await fetch('http://localhost:8000/rides/', {
-        method: 'GET',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      // Fetch bookings from bookings endpoint
-      const bookingsResponse = await fetch('http://localhost:8000/bookings/', {
-        method: 'GET',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!ridesResponse.ok || !bookingsResponse.ok) {
-        throw new Error(`HTTP error! rides: ${ridesResponse.status}, bookings: ${bookingsResponse.status}`);
-      }
-
-      const rides = await ridesResponse.json();
-      const bookings = await bookingsResponse.json();
-
-      setRidesData({ rides, bookings });
-    } catch (error) {
-      console.error("Error fetching rides and bookings:", error);
-      message.error('Failed to load rides and bookings');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleRequestRide = async (rideId) => {
-    try {
-      const userEmail = Cookies.get('user_email');
-      const response = await fetch('http://localhost:8000/bookings/', {
+      const bookingResponse = await fetch('http://localhost:8000/bookings/', {
         method: 'POST',
         credentials: 'include',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          ride_id: rideId,
-          rider_email: userEmail,
-        }),
+          ride_id: ride.ride_id,
+          status: 'confirmed',
+          seats_booked: 1,
+          pickup_location: ride.start_location
+        })
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      if (!bookingResponse.ok) {
+        throw new Error('Failed to request ride');
       }
 
-      message.success('Ride requested successfully!');
-      fetchRidesAndBookings(); // Refresh rides list
+      onRequestRide(ride);
+      message.success('Ride confirmed successfully!');
     } catch (error) {
-      console.error("Error requesting ride:", error);
+      console.error('Ride request error:', error);
       message.error('Failed to request ride');
+    } finally {
+      setIsRequesting(false);
     }
   };
 
-  const showDriverDetails = (ride) => {
-    Swal.fire({
-      title: `Driver: ${ride.driver_name}`,
-      html: `
-        <div class="driver-details">
-          ${ride.driver_picture ?
-            `<img src="${ride.driver_picture}" alt="Driver"
-             style="width: 100px; height: 100px; border-radius: 50%; margin-bottom: 10px;">`
-            : ''}
-          <div class="driver-info">
-            <p><strong>Vehicle Details:</strong></p>
-            <p>Model: ${ride.vehicle_info?.model || 'N/A'}</p>
-            <p>Plate: ${ride.vehicle_info?.plate || 'N/A'}</p>
-            <p>State: ${ride.vehicle_info?.state || 'N/A'}</p>
-          </div>
+  const getStatusColor = (status) => {
+    switch (status.toLowerCase()) {
+      case 'available': return 'green';
+      case 'confirmed':
+      case 'scheduled': return 'blue';
+      case 'completed': return 'gray';
+      case 'canceled': return 'red';
+      default: return 'orange';
+    }
+  };
+
+  return (
+    <Card 
+      hoverable
+      className="h-full"
+      bodyStyle={{ height: '100%', display: 'flex', flexDirection: 'column' }}
+      style={{ 
+        marginBottom: 16,
+        boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+        borderRadius: 8
+      }}
+    >
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'flex-start',
+        marginBottom: 16 
+      }}>
+        <div>
+          <Title level={4} style={{ margin: 0, marginBottom: 8 }}>
+            <EnvironmentOutlined style={{ marginRight: 8, color: '#1890ff' }} />
+            {ride.start_location}
+          </Title>
+          <Title level={4} style={{ margin: 0, color: '#666' }}>
+            <EnvironmentOutlined style={{ marginRight: 8, color: '#52c41a' }} />
+            {ride.end_location}
+          </Title>
         </div>
-      `,
-      showConfirmButton: true,
-      confirmButtonText: 'Close',
-      customClass: {
-        container: 'driver-modal',
-      },
-    });
-  };
+        <Tag color={getStatusColor(ride.status)} style={{ padding: '4px 8px' }}>
+          {ride.status.toUpperCase()}
+        </Tag>
+      </div>
 
-  const formatDateTime = (dateTimeStr) => {
-    try {
-      const date = new Date(dateTimeStr);
-      return date.toLocaleString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: true,
-      });
-    } catch (error) {
-      console.error("Date formatting error:", error);
-      return 'Invalid Date';
-    }
-  };
+      <div style={{ flex: 1 }}>
+        <div style={{ marginBottom: 16 }}>
+          <Text type="secondary">
+            <ClockCircleOutlined style={{ marginRight: 8 }} />
+            {new Date(ride.ride_time || ride.created_at).toLocaleString()}
+          </Text>
+        </div>
 
-  const filterRidesByStatus = (statuses) => {
-    return ridesData.rides.filter((ride) => 
-      statuses.includes(ride.status.toLowerCase())
-    );
-  };
+        {ride.vehicle_info && (
+          <div style={{ marginBottom: 16 }}>
+            <Text>
+              <CarOutlined style={{ marginRight: 8 }} />
+              {ride.vehicle_info.model} (Plate: {ride.vehicle_info.plate})
+            </Text>
+          </div>
+        )}
+      </div>
 
-  const filterBookingsByStatus = (statuses) => {
-    return ridesData.bookings.filter((booking) => 
-      statuses.includes(booking.status.toLowerCase())
-    );
-  };
-
-  const renderRideCard = (ride) => (
-    <Card
-      key={ride._id}
-      className={`ride-card ${ride.status}`}
-      title={
-        <span
-          className="driver-name-link"
-          onClick={() => showDriverDetails(ride)}
-        >
-          Driver: {ride.driver_name}
-        </span>
-      }
-      extra={
-        ride.status === 'available' ? (
-          <Button
-            type="primary"
-            onClick={() => handleRequestRide(ride.ride_id)}
-            disabled={ride.available_seats < 1}
-            className={ride.status}
+      <div style={{ marginTop: 'auto' }}>
+        {type === 'available' ? (
+          <Button 
+            type="primary" 
+            block
+            size="large"
+            disabled={isRequesting}
+            loading={isRequesting}
+            onClick={handleRequestRide}
+            style={{ height: 40 }}
           >
-            Request Ride
+            {isRequesting ? 'Confirming...' : 'Confirm Ride'}
           </Button>
         ) : (
-          <Text type="secondary" className={`status status-${ride.status}`}>
-            {ride.status}
-          </Text>
-        )
-      }
-    >
-      <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-        <div className="ride-details">
-          <div className="ride-info">
-            <p className="location">
-              <strong>From:</strong> {ride.start_location}
-            </p>
-            <p className="location">
-              <strong>To:</strong> {ride.end_location}
-            </p>
-            <p className="datetime">
-              <strong>Departure:</strong> {formatDateTime(ride.ride_time)}
-            </p>
-            <p className="seats">
-              <strong>Seats Available:</strong> {ride.available_seats}/{ride.total_seats}
-            </p>
-            {ride.vehicle_info && (
-              <p className="vehicle">
-                <strong>Vehicle:</strong> {ride.vehicle_info.model}
-                {ride.vehicle_info.plate && ` (${ride.vehicle_info.plate})`}
-              </p>
-            )}
-          </div>
-        </div>
-      </Space>
+          <Button
+            block
+            size="large"
+            icon={<InfoCircleOutlined />}
+            onClick={() => onShowDriverDetails(ride.vehicle_info)}
+            style={{ height: 40 }}
+          >
+            View Details
+          </Button>
+        )}
+      </div>
     </Card>
   );
+};
+
+const RideSection = ({ title, icon: Icon, rides, type, onRequestRide, onShowDriverDetails }) => (
+  <div style={{ marginBottom: 32 }}>
+    <Title level={3} style={{ 
+      display: 'flex', 
+      alignItems: 'center', 
+      gap: '8px', 
+      marginBottom: 24,
+      padding: '8px 0',
+      borderBottom: '2px solid #f0f0f0'
+    }}>
+      <Icon style={{ color: '#1890ff' }} />
+      {title} ({rides.length})
+    </Title>
+    <Row gutter={[16, 16]}>
+      {rides.map(ride => (
+        <Col xs={24} lg={8} key={ride.ride_id}>
+          <RideCard
+            ride={ride}
+            type={type}
+            onRequestRide={onRequestRide}
+            onShowDriverDetails={onShowDriverDetails}
+          />
+        </Col>
+      ))}
+    </Row>
+  </div>
+);
+
+const RidesPage = () => {
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [rides, setRides] = useState([]);
+  const [selectedDriverDetails, setSelectedDriverDetails] = useState(null);
+  const [modalVisible, setModalVisible] = useState(false);
+
+  useEffect(() => {
+    const fetchRides = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch('http://localhost:8000/rides', { 
+          credentials: 'include' 
+        });
+        if (!response.ok) {
+          throw new Error('Failed to fetch rides');
+        }
+        const data = await response.json();
+        setRides(data || []);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRides();
+  }, []);
+
+  const handleRequestRide = (requestedRide) => {
+    setRides(prevRides => prevRides.map(ride =>
+      ride.ride_id === requestedRide.ride_id 
+        ? { ...ride, status: 'confirmed' } 
+        : ride
+    ));
+  };
+
+  const showDriverDetails = (driverDetails) => {
+    setSelectedDriverDetails(driverDetails);
+    setModalVisible(true);
+  };
+
+  const availableRides = useMemo(() => rides.filter(ride => ride.status === 'available'), [rides]);
+  const activeRides = useMemo(() => rides.filter(ride => ['scheduled', 'confirmed'].includes(ride.status)), [rides]);
+  const pastRides = useMemo(() => rides.filter(ride => ['completed', 'canceled'].includes(ride.status)), [rides]);
 
   if (loading) {
     return (
-      <div className="loading-container">
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
         <Spin size="large" />
-        <p>Loading rides...</p>
       </div>
     );
   }
 
-  if (!ridesData.rides.length && !ridesData.bookings.length) {
+  if (error) {
     return (
-      <div className="empty-container">
-        <Empty description={<span>No rides or bookings available at the moment</span>} />
-      </div>
+      <Alert
+        message="Error Loading Rides"
+        description={error}
+        type="error"
+        style={{ maxWidth: 800, margin: '32px auto' }}
+      />
     );
   }
 
   return (
-    <div className="rides-page">
-      <div className="page-header">
-        <Title level={2}>Available Rides</Title>
-        <Text type="secondary">Click on the driver's name to see more details</Text>
-      </div>
+    <div style={{ maxWidth: 1200, margin: '0 auto', padding: 24 }}>
+      <Title level={2} style={{ marginBottom: 32, textAlign: 'center' }}>
+        Your Rides Dashboard
+      </Title>
+      
+      <RideSection
+        title="Available Rides"
+        icon={ClockCircleOutlined}
+        rides={availableRides}
+        type="available"
+        onRequestRide={handleRequestRide}
+        onShowDriverDetails={showDriverDetails}
+      />
+      
+      <RideSection
+        title="Active Rides"
+        icon={CarOutlined}
+        rides={activeRides}
+        type="active"
+        onRequestRide={handleRequestRide}
+        onShowDriverDetails={showDriverDetails}
+      />
+      
+      <RideSection
+        title="Past Rides"
+        icon={CheckCircleOutlined}
+        rides={pastRides}
+        type="past"
+        onRequestRide={handleRequestRide}
+        onShowDriverDetails={showDriverDetails}
+      />
 
-      {/* Section 1: Available Rides */}
-      <div className="rides-section">
-        <Title level={4}>Available Rides</Title>
-        <div className="card-container">
-          {filterRidesByStatus(['available']).length > 0 ? (
-            filterRidesByStatus(['available']).map((ride) => renderRideCard(ride))
-          ) : (
-            <Empty description="No available rides" />
-          )}
-        </div>
-      </div>
-
-      {/* Section 2: Active Rides */}
-      <div className="rides-section">
-        <Title level={4}>Active Rides</Title>
-        <div className="card-container">
-          {filterBookingsByStatus(['scheduled']).length > 0 ? (
-            filterBookingsByStatus(['scheduled']).map((booking) => {
-              const ride = ridesData.rides.find(ride => ride.ride_id === booking.ride_id);
-              return ride && renderRideCard(ride);
-            })
-          ) : (
-            <Empty description="No active rides" />
-          )}
-        </div>
-      </div>
-
-      {/* Section 3: Completed/Rejected/Canceled Rides */}
-      <div className="rides-section">
-        <Title level={4}>Completed, Rejected, or Canceled Rides</Title>
-        <div className="card-container">
-          {filterBookingsByStatus(['completed', 'rejected', 'canceled']).length > 0 ? (
-            filterBookingsByStatus(['completed', 'rejected', 'canceled']).map((booking) => {
-              const ride = ridesData.rides.find(ride => ride.ride_id === booking.ride_id);
-              return ride && renderRideCard(ride);
-            })
-          ) : (
-            <Empty description="No completed, rejected, or canceled rides" />
-          )}
-        </div>
-      </div>
+      <Modal
+        title="Vehicle Details"
+        open={modalVisible}
+        onCancel={() => setModalVisible(false)}
+        footer={[
+          <Button key="close" onClick={() => setModalVisible(false)}>
+            Close
+          </Button>
+        ]}
+      >
+        {selectedDriverDetails && (
+          <Row gutter={[16, 16]}>
+            <Col span={24}>
+              <Text strong>Vehicle Model: </Text>
+              <Text>{selectedDriverDetails.model}</Text>
+            </Col>
+            <Col span={24}>
+              <Text strong>License Plate: </Text>
+              <Text>{selectedDriverDetails.plate}</Text>
+            </Col>
+          </Row>
+        )}
+      </Modal>
     </div>
   );
 };
 
-export default Rides;
+export default RidesPage;
