@@ -1,15 +1,30 @@
-from flask import request, jsonify, make_response
+from flask import request, jsonify, make_response, send_from_directory
 from flask_restx import Namespace, Resource, fields
 from bson import ObjectId
 from datetime import datetime
 import uuid
+import os
 from app.database import db
 
+# Configuration
+UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'uploads')
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 users_ns = Namespace('users', description='User operations')
 
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-# User Model
+def handle_cors_response(response):
+    """Add CORS headers to response"""
+    response.headers.add('Access-Control-Allow-Origin', 'http://localhost:5173')
+    response.headers.add('Access-Control-Allow-Credentials', 'true')
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+    response.headers.add('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+    return response
+
+# Model definitions
 user_model = users_ns.model('User', {
     'user_id': fields.String(description="Unique User ID"),
     'email': fields.String(required=True, description="User's university email"),
@@ -18,134 +33,205 @@ user_model = users_ns.model('User', {
     'university_email_verified': fields.Boolean(default=False),
     'profile_picture': fields.String(description="Profile Picture URL"),
     'vehicle_info': fields.Nested(users_ns.model('Vehicle', {
-        'type': fields.String(description="Vehicle type (sedan, SUV, etc.)"),
+        'type': fields.String(description="Vehicle type"),
         'model': fields.String(description="Vehicle model"),
         'plate': fields.String(description="License plate"),
         'state': fields.String(description="State of registration")
     }), required=False),
-    'emergency_contacts': fields.List(fields.String, description="List of emergency contacts"),
+    'emergency_contacts': fields.List(fields.String, description="Emergency contacts"),
     'created_at': fields.DateTime(description="Account creation date"),
 })
 
-# ✅ NEW: Check if Email Exists
+@users_ns.route('/uploads/<path:filename>')
+class UploadedFile(Resource):
+    def get(self, filename):
+        """Serve uploaded files"""
+        return send_from_directory(UPLOAD_FOLDER, filename)
+
 @users_ns.route('/check_email')
 class CheckEmail(Resource):
+    def options(self):
+        """Handle CORS preflight"""
+        response = make_response()
+        return handle_cors_response(response)
+
     def get(self):
-        """Check if a user exists by email"""
-        email = request.args.get('email')
-        if not email:
-            return jsonify({'error': 'Email is required'}), 400
-        
-        user = db.users.find_one({'email': email})
-        return jsonify({'exists': bool(user)})  # ✅ Returns true/false
+        """Check if email exists"""
+        try:
+            email = request.args.get('email')
+            if not email:
+                return handle_cors_response(jsonify({'error': 'Email is required'})), 400
+            
+            user = db.users.find_one({'email': email})
+            return handle_cors_response(jsonify({'exists': bool(user)}))
+        except Exception as e:
+            return handle_cors_response(jsonify({'error': str(e)})), 500
 
-
-@users_ns.route('/onboard', methods=['OPTIONS', 'POST'])
+@users_ns.route('/onboard')
 class UserOnboard(Resource):
     def options(self):
-        """Handles CORS Preflight Request"""
+        """Handle CORS preflight"""
         response = make_response()
-        response.headers["Access-Control-Allow-Origin"] = "*"
-        response.headers["Access-Control-Allow-Methods"] = "OPTIONS, POST"
-        response.headers["Access-Control-Allow-Headers"] = "Content-Type"
-        return response, 200
+        return handle_cors_response(response)
 
     def post(self):
-        """Handles user onboarding and saves details in MongoDB"""
-        data = request.get_json()
+        """Handle user onboarding"""
+        try:
+            # Get email from form data or JSON
+            email = request.form.get('email') if request.form else request.json.get('email')
+            name = request.form.get('name') if request.form else request.json.get('name')
+            role = request.form.get('role') if request.form else request.json.get('role')
 
-        if not data.get('email') or not data.get('name'):
-            return jsonify({"error": "Missing required fields"}), 400
-        
-        existing_user = db.users.find_one({'email': data['email']})
-        if existing_user:
-            return jsonify({'message': 'User already exists'}), 400  
+            if not email or not name or not role:
+                return handle_cors_response(jsonify({"error": "Missing required fields"})), 400
 
-        data['user_id'] = str(uuid.uuid4())
+            # Check for existing user
+            existing_user = db.users.find_one({'email': email})
+            if existing_user:
+                return handle_cors_response(jsonify({'message': 'User already exists'})), 400
 
-        if 'vehicle_type' in data:
-            data['vehicle_info'] = {
-                'type': data.get('vehicle_type'),
-                'model': data.get('vehicle_model'),
-                'plate': data.get('vehicle_plate'),
-                'state': data.get('vehicle_state'),
+            # Initialize user data
+            user_data = {
+                'user_id': str(uuid.uuid4()),
+                'email': email,
+                'name': name,
+                'user_type': role,
+                'created_at': datetime.utcnow(),
+                'university_email_verified': False
             }
-            del data['vehicle_type']
-            del data['vehicle_model']
-            del data['vehicle_plate']
-            del data['vehicle_state']
 
-        data['created_at'] = datetime.utcnow()
 
-        result = db.users.insert_one(data)
-        data['_id'] = str(result.inserted_id)
+            # Handle vehicle information for drivers
+            if role == 'driver':
+                vehicle_model = request.form.get('vehicleModel') if request.form else request.json.get('vehicleModel')
+                plate_number = request.form.get('plateNumber') if request.form else request.json.get('plateNumber')
+                vehicle_state = request.form.get('vehicleState') if request.form else request.json.get('vehicleState')
+                
+                if vehicle_model and plate_number and vehicle_state:
+                    user_data['vehicle_info'] = {
+                        'model': vehicle_model,
+                        'plate': plate_number,
+                        'state': vehicle_state
+                    }
 
-        return jsonify(data), 201
-# ✅ Register a New User
+            # Save to database
+            result = db.users.insert_one(user_data)
+            user_data['_id'] = str(result.inserted_id)
+
+            response = jsonify(user_data)
+            return handle_cors_response(response), 201
+
+        except Exception as e:
+            print(f"Error in onboarding: {str(e)}")
+            return handle_cors_response(jsonify({"error": str(e)})), 500
+
 @users_ns.route('/')
 class UserList(Resource):
+    def options(self):
+        """Handle CORS preflight"""
+        response = make_response()
+        return handle_cors_response(response)
+
     @users_ns.marshal_list_with(user_model)
     def get(self):
-        """Fetch all users"""
-        users = db.users.find()
-        return [{'_id': str(user['_id']), **user} for user in users]
+        """Get all users"""
+        try:
+            users = list(db.users.find())
+            for user in users:
+                user['_id'] = str(user['_id'])
+            return handle_cors_response(jsonify(users))
+        except Exception as e:
+            return handle_cors_response(jsonify({'error': str(e)})), 500
 
     @users_ns.expect(user_model)
     def post(self):
-        """Register a new user"""
-        data = request.get_json()
+        """Create new user"""
+        try:
+            data = request.get_json()
+            if not data.get('email') or not data.get('name'):
+                return handle_cors_response(jsonify({'error': 'Missing required fields'})), 400
 
-        # Generate a unique user_id if not provided
-        if 'user_id' not in data:
-            data['user_id'] = str(uuid.uuid4())  # Generate unique user ID
+            existing_user = db.users.find_one({'email': data['email']})
+            if existing_user:
+                return handle_cors_response(jsonify({'error': 'Email already registered'})), 400
 
-        # Ensure email is unique
-        existing_user = db.users.find_one({'email': data['email']})
-        if existing_user:
-            return jsonify({'message': 'Email already registered'}), 400  
+            data['user_id'] = str(uuid.uuid4())
+            data['created_at'] = datetime.utcnow()
+            
+            result = db.users.insert_one(data)
+            data['_id'] = str(result.inserted_id)
+            
+            return handle_cors_response(jsonify(data)), 201
+        except Exception as e:
+            return handle_cors_response(jsonify({'error': str(e)})), 500
 
-        # Convert vehicle fields to proper structure
-        if 'vehicle_type' in data:
-            data['vehicle_info'] = {
-                'type': data.get('vehicle_type'),
-                'model': data.get('vehicle_model'),
-                'plate': data.get('vehicle_plate'),
-                'state': data.get('vehicle_state'),
-            }
-            del data['vehicle_type']
-            del data['vehicle_model']
-            del data['vehicle_plate']
-            del data['vehicle_state']
-
-        data['created_at'] = datetime.utcnow()
-        result = db.users.insert_one(data)
-        data['_id'] = str(result.inserted_id)
-        return jsonify(data), 201  
-
-# ✅ Fetch or Update User
 @users_ns.route('/<string:user_id>')
-@users_ns.param('user_id', 'User ID')
 class UserResource(Resource):
+    def options(self):
+        """Handle CORS preflight"""
+        response = make_response()
+        return handle_cors_response(response)
+
     def get(self, user_id):
-        """Fetch a specific user by ID"""
-        user = db.users.find_one({'user_id': user_id})
-        if user:
-            return jsonify({'_id': str(user['_id']), **user})
-        return jsonify({'error': 'User not found'}), 404
+        """Get user by ID"""
+        try:
+            user = db.users.find_one({'user_id': user_id})
+            if not user:
+                return handle_cors_response(jsonify({'error': 'User not found'})), 404
+            user['_id'] = str(user['_id'])
+            return handle_cors_response(jsonify(user))
+        except Exception as e:
+            return handle_cors_response(jsonify({'error': str(e)})), 500
 
     @users_ns.expect(user_model)
     def put(self, user_id):
         """Update user profile"""
-        data = request.get_json()
-        data['updated_at'] = datetime.utcnow()
-        result = db.users.update_one({'user_id': user_id}, {'$set': data})
-        if result.matched_count == 0:
-            return jsonify({'error': 'User not found'}), 404
-        return jsonify(db.users.find_one({'user_id': user_id}))
+        try:
+            data = request.get_json()
+            data['updated_at'] = datetime.utcnow()
+            
+            result = db.users.update_one(
+                {'user_id': user_id}, 
+                {'$set': data}
+            )
+            
+            if result.matched_count == 0:
+                return handle_cors_response(jsonify({'error': 'User not found'})), 404
+                
+            updated_user = db.users.find_one({'user_id': user_id})
+            updated_user['_id'] = str(updated_user['_id'])
+            return handle_cors_response(jsonify(updated_user))
+        except Exception as e:
+            return handle_cors_response(jsonify({'error': str(e)})), 500
 
     def delete(self, user_id):
-        """Delete a user"""
-        result = db.users.delete_one({'user_id': user_id})
-        if result.deleted_count == 0:
-            return jsonify({'error': 'User not found'}), 404
-        return jsonify({'message': 'User deleted'}), 200
+        """Delete user"""
+        try:
+            result = db.users.delete_one({'user_id': user_id})
+            if result.deleted_count == 0:
+                return handle_cors_response(jsonify({'error': 'User not found'})), 404
+            return handle_cors_response(jsonify({'message': 'User deleted successfully'}))
+        except Exception as e:
+            return handle_cors_response(jsonify({'error': str(e)})), 500
+
+@users_ns.route('/verify_email/<string:user_id>')
+class EmailVerification(Resource):
+    def options(self):
+        """Handle CORS preflight"""
+        response = make_response()
+        return handle_cors_response(response)
+
+    def post(self, user_id):
+        """Verify university email"""
+        try:
+            result = db.users.update_one(
+                {'user_id': user_id},
+                {'$set': {'university_email_verified': True}}
+            )
+            
+            if result.matched_count == 0:
+                return handle_cors_response(jsonify({'error': 'User not found'})), 404
+                
+            return handle_cors_response(jsonify({'message': 'Email verified successfully'}))
+        except Exception as e:
+            return handle_cors_response(jsonify({'error': str(e)})), 500
