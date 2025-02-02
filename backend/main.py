@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, make_response, request, jsonify
 from flask_restx import Api
 from flask_cors import CORS
 import os
@@ -51,6 +51,18 @@ def home():
         }
     }
 
+@app.route('/test-cors', methods=['GET', 'OPTIONS'])
+def test_cors():
+    """Test endpoint for CORS configuration"""
+    if request.method == 'OPTIONS':
+        response = make_response()
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:5173")
+        response.headers.add("Access-Control-Allow-Headers", "Content-Type")
+        response.headers.add("Access-Control-Allow-Methods", "GET, OPTIONS")
+        response.headers.add("Access-Control-Allow-Credentials", "true")
+        return response
+        
+    return jsonify({"message": "CORS is working"})
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=8000)
