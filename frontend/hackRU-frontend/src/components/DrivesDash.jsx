@@ -189,8 +189,11 @@ function DrivesDash() {
         <div>
             {/* Main Card for Viewing Requests */}
             <div className="mydrives-container">
-            <Card
-            title={`Drive: ${drive.start_location} → ${drive.end_location}`}
+            {
+    rides.map(ride => (
+        <Card
+            key={ride._id}  // Assuming each ride has a unique _id
+            title={`Drive: ${ride.start_location} → ${ride.end_location}`}
             extra={
                 <Button type="primary" onClick={toggleExpand}>
                     {expanded ? "Collapse" : "Expand"}
@@ -199,9 +202,8 @@ function DrivesDash() {
             style={{ width: '150%', maxWidth: '600px', margin: '30px auto' }}
         >
             {/* Main Drive Details */}
-            <p><strong>Ride Time:</strong> {new Date(drive.ride_time).toLocaleString()}</p>
-            <p><strong>Seats Available:</strong> {drive.available_seats} / {drive.total_seats}</p>
-            <p><strong>Vehicle:</strong> {drive.vehicle_info.vehicle_type} ({drive.vehicle_info.license_plate})</p>
+            <p><strong>Seats Available:</strong> {ride.available_seats} / {ride.total_seats}</p>
+            <p><strong>Vehicle:</strong> {ride.vehicle_info.vehicle_type} ({ride.vehicle_info.license_plate})</p>
 
             {/* Expandable Requests List */}
             {expanded && (
@@ -209,7 +211,7 @@ function DrivesDash() {
                     <Panel header="Ride Requests" key="1">
                         <List
                             bordered
-                            dataSource={drive.requests}
+                            dataSource={ride.requests}
                             renderItem={request => (
                                 <List.Item>
                                     <strong>{request.name}</strong> - {request.status}
@@ -220,6 +222,8 @@ function DrivesDash() {
                 </Collapse>
             )}
         </Card>
+    ))
+}
             </div>
 
             {/* SpeedDial to Add New Ride */}
