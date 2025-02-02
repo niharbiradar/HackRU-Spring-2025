@@ -28,6 +28,36 @@ ride_model = rides_ns.model('Ride', {
     'created_at': fields.DateTime(description="Ride creation timestamp"),
 })
 
+@rides_ns.route('/driver/<string:driver_id>')
+class DriverRides(Resource):
+    def get(self, driver_id):
+        """Fetch rides for a specific driver"""
+        try:
+            # Find all rides for this driver
+            rides = db.rides.find({'driver_id': driver_id})
+            
+            # Convert to list and process for JSON
+            rides_list = []
+            for ride in rides:
+                ride['_id'] = str(ride['_id'])
+                # Convert datetime objects to strings
+                if 'ride_time' in ride:
+                    ride['ride_time'] = ride['ride_time'].isoformat()
+                if 'created_at' in ride:
+                    ride['created_at'] = ride['created_at'].isoformat()
+                rides_list.append(ride)
+
+            response = make_response(jsonify(rides_list))
+            response.headers.add("Access-Control-Allow-Origin", "http://localhost:5173")
+            response.headers.add("Access-Control-Allow-Credentials", "true")
+            return response
+
+        except Exception as e:
+            error_response = make_response(jsonify({'error': str(e)}), 500)
+            error_response.headers.add("Access-Control-Allow-Origin", "http://localhost:5173")
+            error_response.headers.add("Access-Control-Allow-Credentials", "true")
+            return error_response
+
 @rides_ns.route('/test-db')
 class TestDB(Resource):
     def get(self):
